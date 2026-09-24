@@ -686,7 +686,8 @@
         p.t['j' + r.journey + ':' + r.screen] = { j: +r.journey, k: r.screen, v: r.placement === 'leading' ? 'L' : 'T', ok: +r.success, t: n(r.time_ms), tf: n(r.first_tap_ms), taps: n(r.taps), wrong: n(r.wrong), undo: n(r.undo), dead: n(r.dead_taps), ft: r.first_target, gap: n(r.pause_before_finish_ms), scr: n(r.scrolls),
           firstOk: n(r.first_tap_correct), fix: n(r.first_fix_ms), modeAt: n(r.found_select_ms), navTaps: n(r.row_taps_before_select), usedSearch: n(r.used_search), usedAll: n(r.used_select_all) };
       });
-      return Object.values(by).filter(p => p.d !== 'test' && !/^TEST/.test(p.pid));
+      const listed = new Set((data.responses || []).map(r => String(r.pid)));
+      return Object.values(by).filter(p => listed.has(p.pid) && p.d !== 'test' && !/^TEST/.test(p.pid));
     };
     const loadSheet = async () => {
       if (!SHEET_ENDPOINT) { status.textContent = 'No Sheet connected on this copy of the page.'; return; }
@@ -696,7 +697,7 @@
         const data = await res.json();
         const rows = fromSheet(data);
         const last = (data.responses || []).map(r => r.received_at).filter(Boolean).sort().pop();
-        status.textContent = rows.length + ' responses in the Sheet' + (last ? ', last received ' + new Date(last).toLocaleString() : '') + '. Test rows are ignored.';
+        status.textContent = rows.length + (rows.length === 1 ? ' person' : ' people') + ' in the Responses tab' + (last ? ', last one ' + new Date(last).toLocaleString() : '') + '. Delete a row there to leave someone out.';
         analyse(rows);
       } catch (e) { status.textContent = 'Could not read the Sheet. If Code.gs was updated, redeploy it as a new version.'; }
     };
@@ -761,7 +762,7 @@
         const verdict = h('div', { class: 'card' },
           h('span', { class: 'overline' }, (dev === 'mobile' ? 'Phone' : 'Laptop') + ' · ' + people + ' people'),
           h('h2', { class: 't-2xl' }, lead ? nameOf(lead).replace(' (', ' is ahead (') : 'No difference yet'),
-          h('div', { class: 'tip ' + cls }, h('b', null, confidence + '. '), 'Won ' + won.L + ' screens vs ' + won.T + (perScreen.length - won.L - won.T ? ' (' + (perScreen.length - won.L - won.T) + ' tied)' : '') + '. Of ' + totalVotes + ' head-to-heads, left won ' + votes.L + ', right won ' + votes.T + ', ' + votes.tie + ' were ties.'),
+          h('div', { class: 'tip ' + cls }, h('b', null, confidence + '. '), 'Left won ' + won.L + ' screens, right won ' + won.T + (perScreen.length - won.L - won.T ? ', ' + (perScreen.length - won.L - won.T) + ' tied' : '') + '. Each person did every screen both ways; the correct, faster side wins that screen for them.'),
           h('div', { style: 'display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px' },
             big('Completed correctly', okRate('L'), okRate('T'), x => x, false),
             big('Typical time per screen', medT('L'), medT('T'), fmtS, true),
@@ -776,14 +777,16 @@
           h('p', { class: 't-sm sec' }, 'A screen goes to whichever side has more votes. The overall winner is the side that wins more screens. Times are medians, so one slow person cannot swing it. Numbers become worth reading at about 8 people, and worth arguing over at 15.'));
 
         // screen table
-        const tbl = h('table', { class: 'res-table' }, h('thead', null, h('tr', null, h('th', null, 'Screen'), h('th', null, 'Winner'), h('th', { class: 'num' }, 'Votes left'), h('th', { class: 'num' }, 'Votes right'), h('th', { class: 'num' }, 'Ties'), h('th', { class: 'num' }, 'Correct left'), h('th', { class: 'num' }, 'Correct right'), h('th', { class: 'num' }, 'Time left'), h('th', { class: 'num' }, 'Time right'), h('th', { class: 'num' }, 'Wrong taps left'), h('th', { class: 'num' }, 'Wrong taps right'))));
+        const tbl = h('table', { class: 'res-table' }, h('thead', null, h('tr', null, h('th', null, 'Screen'), h('th', null, 'Winner'), h('th', { class: 'num' }, 'Left won'), h('th', { class: 'num' }, 'Right won'), h('th', { class: 'num' }, 'Ties'))));
+        const dtbl = h('table', { class: 'res-table' }, h('thead', null, h('tr', null, h('th', null, 'Screen'), h('th', { class: 'num' }, 'Correct left'), h('th', { class: 'num' }, 'Correct right'), h('th', { class: 'num' }, 'Time left'), h('th', { class: 'num' }, 'Time right'), h('th', { class: 'num' }, 'Wrong taps left'), h('th', { class: 'num' }, 'Wrong taps right'))));
+        const dtb = h('tbody'); dtbl.append(dtb);
         const tb = h('tbody'); tbl.append(tb);
-        perScreen.forEach(x => tb.append(h('tr', { class: x.winner ? 'hl' : '' },
-          h('td', null, LABEL[x.k]), h('td', { class: x.winner ? 'l' : 'sec' }, x.winner === 'L' ? 'Left' : x.winner === 'T' ? 'Right' : 'Tie'),
-          h('td', { class: 'num' }, x.l), h('td', { class: 'num' }, x.t), h('td', { class: 'num' }, x.tie),
-          h('td', { class: 'num' }, pct(x.okL, x.n)), h('td', { class: 'num' }, pct(x.okT, x.n)),
-          h('td', { class: 'num' }, fmtS(x.tL)), h('td', { class: 'num' }, fmtS(x.tT)), h('td', { class: 'num' }, x.wL), h('td', { class: 'num' }, x.wT))));
-        const screensCard = h('div', { class: 'card' }, h('h3', { class: 't-lg bold' }, 'Screen by screen'), h('p', { class: 't-sm sec' }, 'Each row compares the same people on the same screen, left against right. Highlighted rows have a winner.'), h('div', { style: 'overflow-x:auto' }, tbl));
+        perScreen.forEach(x => {
+          tb.append(h('tr', { class: x.winner ? 'hl' : '' }, h('td', null, LABEL[x.k]), h('td', { class: x.winner ? 'l' : 'sec' }, x.winner === 'L' ? 'Left' : x.winner === 'T' ? 'Right' : 'Tie'), h('td', { class: 'num' }, x.l), h('td', { class: 'num' }, x.t), h('td', { class: 'num' }, x.tie)));
+          dtb.append(h('tr', null, h('td', null, LABEL[x.k]), h('td', { class: 'num' }, pct(x.okL, x.n)), h('td', { class: 'num' }, pct(x.okT, x.n)), h('td', { class: 'num' }, fmtS(x.tL)), h('td', { class: 'num' }, fmtS(x.tT)), h('td', { class: 'num' }, x.wL), h('td', { class: 'num' }, x.wT)));
+        });
+        const screensCard = h('div', { class: 'card' }, h('h3', { class: 't-lg bold' }, 'Screen by screen'), h('p', { class: 't-sm sec' }, 'How many people did better with the control on the left, and how many on the right, for each screen.'), h('div', { style: 'overflow-x:auto' }, tbl));
+        const detailCard = h('div', { class: 'card' }, h('h3', { class: 't-lg bold' }, 'Numbers behind each screen'), h('div', { style: 'overflow-x:auto' }, dtbl));
 
         // first impression: journey 1 only, across people
         const fi = screens.filter(k => !(k === 'table' && dev === 'mobile')).map(k => {
@@ -810,7 +813,9 @@
           h('p', { class: 't-sm sec' }, 'A second journey is normally faster because people have practised. If one order gains much less, or makes more mistakes, that switch hurt more. That matters because whichever side ships, existing users will have to relearn it.'),
           h('ul', { class: 't-sm', style: 'margin:0;padding-left:20px' }, sw));
 
-        out.append(verdict, how, screensCard, first, switchCard);
+        const details = h('div', { hidden: true, style: 'display:flex;flex-direction:column;gap:16px' }, how, detailCard, first, switchCard);
+        const toggle = h('button', { class: 'btn ghost md', onclick: () => { details.hidden = !details.hidden; toggle.textContent = details.hidden ? 'Show the details' : 'Hide the details'; } }, 'Show the details');
+        out.append(verdict, screensCard, toggle, details);
       }
 
       // preference
