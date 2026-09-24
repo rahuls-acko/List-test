@@ -1,0 +1,70 @@
+/*
+ * Placement Study — Google Sheet collector
+ * Paste this into Extensions → Apps Script of a blank Google Sheet, then
+ * Deploy → New deployment → Web app → Execute as: Me, Who has access: Anyone.
+ * Copy the web-app URL into SHEET_ENDPOINT in index.html.
+ *
+ * Creates two tabs on first run:
+ *   Responses — one row per participant (device, group, preference taps)
+ *   Tasks     — one row per participant per screen (all implicit measures)
+ * A participant id that already exists is ignored, so a refresh never double-counts.
+ */
+
+var RESP_HEAD = ['received_at', 'pid', 'device', 'group', 'os', 'touch', 'viewport', 'finished_at',
+  'pref_list', 'pref_list_first', 'pref_list_ms', 'pref_toggles', 'pref_toggles_first', 'pref_toggles_ms'];
+var TASK_HEAD = ['pid', 'device', 'group', 'task', 'placement', 'success', 'time_ms', 'first_tap_ms', 'taps', 'wrong', 'undo',
+  'dead_taps', 'first_target', 'pause_before_finish_ms', 'scrolls', 'first_tap_correct', 'first_fix_ms', 'found_select_ms',
+  'row_taps_before_select', 'used_search', 'used_select_all'];
+
+function sheet(name, head) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName(name);
+  if (!sh) {
+    sh = ss.insertSheet(name);
+    sh.appendRow(head);
+    sh.getRange(1, 1, 1, head.length).setFontWeight('bold');
+    sh.setFrozenRows(1);
+  }
+  return sh;
+}
+
+function doPost(e) {
+  var out = { ok: false };
+  try {
+    var d = JSON.parse(e.postData.contents);
+    if (!d || !d.pid) throw new Error('no pid');
+    var lock = LockService.getScriptLock();
+    lock.waitLock(10000);
+    try {
+      var resp = sheet('Responses', RESP_HEAD);
+      var tasks = sheet('Tasks', TASK_HEAD);
+      var pids = resp.getLastRow() > 1 ? resp.getRange(2, 2, resp.getLastRow() - 1, 1).getValues().map(function (r) { return String(r[0]); }) : [];
+      if (pids.indexOf(String(d.pid)) === -1) {
+        var pr = d.pr || {}, env = d.env || {};
+        var pl = pr.list || {}, pt = pr.toggles || {};
+        resp.appendRow([new Date(), d.pid, d.d, d.g, env.os || '', env.touch || 0, (env.vw || '') + 'x' + (env.vh || ''), d.at || '',
+          pl.pick || '', pl.first || '', pl.t || '', pt.pick || '', pt.first || '', pt.t || '']);
+        var rows = [];
+        Object.keys(d.t || {}).forEach(function (k) {
+          var x = d.t[k];
+          rows.push([d.pid, d.d, d.g, k, x.v === 'L' ? 'leading' : 'trailing', x.ok, x.t, x.tf, x.taps, x.wrong, x.undo,
+            x.dead, x.ft, x.gap, x.scr, v(x.firstOk), v(x.fix), v(x.modeAt), v(x.navTaps), v(x.usedSearch), v(x.usedAll)]);
+        });
+        if (rows.length) tasks.getRange(tasks.getLastRow() + 1, 1, rows.length, TASK_HEAD.length).setValues(rows);
+      }
+      out = { ok: true, pid: d.pid };
+    } finally {
+      lock.releaseLock();
+    }
+  } catch (err) {
+    out = { ok: false, error: String(err) };
+  }
+  return ContentService.createTextOutput(JSON.stringify(out)).setMimeType(ContentService.MimeType.JSON);
+}
+
+function v(x) { return x === undefined || x === null ? '' : x; }
+
+// Opening the web-app URL in a browser shows this, which confirms the deployment works.
+function doGet() {
+  return ContentService.createTextOutput('Placement Study collector is running.');
+}

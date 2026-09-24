@@ -1,0 +1,762 @@
+<meta charset="utf-8">
+<title>Placement Study</title>
+<link rel="stylesheet" href="fonts.css">
+<style>
+  /* Umbrella DS 2.0 semantic tokens (light), taken from @acko/tokens theme.css.
+     Single theme on purpose: every participant must see the identical stimulus. */
+  :root {
+    color-scheme: light;
+    --textPrimary: #0f0f10;
+    --textSecondary: #474649;
+    --textTertiary: #8f8e92;
+    --textDisabled: #cccbcd;
+    --textBrand: #6841e6;
+    --textLink: #2563eb;
+    --textStaticLight: #ffffff;
+    --brandPrimary: #6841e6;
+    --brandHover: #5a1fd4;
+    --brandHighlight: #795dee;
+    --brandRing: #c1bdfc;
+    --brandSubtle: #eae0fe;
+    --surfaceBasePrimary: #fafafa;
+    --surfaceFillDefault: #ffffff;
+    --surfaceFillSubtle: #efeff0;
+    --surfaceFillHover: rgba(0,0,0,0.05);
+    --borderSoft: rgba(0,0,0,0.05);
+    --borderMedium: rgba(0,0,0,0.1);
+    --borderFocus: rgba(104,65,230,0.3);
+    --statusSuccessSubtle: #dcfce7;
+    --statusSuccessText: #15803d;
+    --statusWarningSubtle: #ffe5cc;
+    --statusWarningText: #b65c0c;
+    --statusInfoSubtle: #eae0fe;
+    --statusInfoText: #5a1fd4;
+    --radiusSm: 4px; --radiusMd: 6px; --radiusLg: 8px; --radius2xl: 12px; --radius5xl: 24px; --radiusFull: 9999px;
+    --easeOutCubic: cubic-bezier(0.33, 1, 0.68, 1);
+    --font: 'Euclid Circular B', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --page-w: 520px;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--surfaceBasePrimary); color: var(--textPrimary); font-family: var(--font); font-size: 16px; line-height: 22px; -webkit-font-smoothing: antialiased; }
+  button, input { font: inherit; color: inherit; }
+  button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  p, h1, h2, h3 { margin: 0; }
+  :focus-visible { outline: 2px solid var(--borderFocus); outline-offset: 2px; }
+
+  /* @acko/typography scales */
+  .t-2xl { font-size: 24px; line-height: 30px; font-weight: 700; letter-spacing: -0.2px; text-wrap: balance; }
+  .t-lg { font-size: 18px; line-height: 24px; }
+  .t-base { font-size: 16px; line-height: 20px; }
+  .t-sm { font-size: 14px; line-height: 18px; }
+  .t-xs { font-size: 12px; line-height: 16px; }
+  .bold { font-weight: 700; } .medium { font-weight: 500; }
+  .sec { color: var(--textSecondary); } .ter { color: var(--textTertiary); } .brand { color: var(--textBrand); }
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* page = the app's own main: px-20, py-24, max-w-520, off-white */
+  .page { min-height: 100%; padding: 24px 20px calc(120px + env(safe-area-inset-bottom, 0px)); }
+  .page.wide { --page-w: 1040px; }
+  .col { width: 100%; max-width: var(--page-w); margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+
+  /* MobileHeader: back row, 16px, 2xl bold title, sm medium subtitle */
+  .hdr { display: flex; flex-direction: column; gap: 16px; }
+  .hdr .back { display: flex; align-items: center; min-height: 40px; }
+  .hdr .back svg { width: 24px; height: 24px; color: var(--textPrimary); }
+  .hdr .titles { display: flex; flex-direction: column; gap: 8px; }
+  .hdr .sub { font-size: 14px; line-height: 18px; font-weight: 500; color: var(--textSecondary); }
+
+  /* the step's instruction: reads as the screen's own helper line, not a study widget */
+  .goal { font-size: 14px; line-height: 18px; font-weight: 500; color: var(--textPrimary); }
+
+  /* @acko/card secondary: white, hairline, 24px radius */
+  .card { background: var(--surfaceFillDefault); border: 1px solid var(--borderMedium); border-radius: var(--radius5xl); padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+  .card.sel { border-color: var(--brandPrimary); }
+
+  /* @acko/badge solid purple sm */
+  .badge { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: var(--radiusFull); background: var(--brandSubtle); color: var(--statusInfoText); font-size: 12px; line-height: 18px; font-weight: 500; width: fit-content; }
+  .badge.green { background: var(--statusSuccessSubtle); color: var(--statusSuccessText); }
+  .badge.orange { background: var(--statusWarningSubtle); color: var(--statusWarningText); }
+  .badge.grey { background: var(--surfaceFillSubtle); color: var(--textSecondary); }
+
+  /* @acko/button */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 56px; padding: 0 24px; border-radius: var(--radiusFull); border: 1px solid transparent; font-weight: 500; font-size: 18px; line-height: 24px; white-space: nowrap; transition: background .15s, transform .1s; }
+  .btn.primary { background: var(--brandPrimary); color: var(--textStaticLight); border-color: var(--brandHighlight); }
+  .btn.primary:hover { background: var(--brandHover); }
+  .btn.primary:active { transform: scale(.97); }
+  .btn.primary:disabled { background: var(--surfaceFillSubtle); color: var(--textDisabled); border-color: transparent; cursor: not-allowed; }
+  .btn.secondary { background: var(--surfaceFillDefault); color: var(--brandPrimary); border-color: var(--brandPrimary); }
+  .btn.ghost { background: transparent; color: var(--brandPrimary); }
+  .btn.sm { height: 36px; padding: 0 16px; font-size: 14px; line-height: 18px; }
+  .btn.md { height: 48px; padding: 0 16px; font-size: 16px; line-height: 22px; }
+  .btn.full { width: 100%; }
+  .btn svg { width: 18px; height: 18px; }
+  .linkbtn { background: none; border: 0; padding: 0; color: var(--textLink); font-weight: 500; font-size: 14px; }
+
+  /* floating action bar: white pill container with shadow, fixed to bottom */
+  .fab { position: fixed; left: 0; right: 0; bottom: 0; padding: 0 12px calc(12px + env(safe-area-inset-bottom, 0px)); z-index: 10; pointer-events: none; }
+  .fab .in { pointer-events: auto; max-width: var(--page-w); margin: 0 auto; background: var(--surfaceFillDefault); border-radius: 32px; padding: 16px; box-shadow: 0 16px 48px rgba(15,15,16,.10), 0 4px 12px rgba(15,15,16,.10); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .fab .in.stack { flex-direction: column; align-items: stretch; gap: 8px; }
+  .fab .hint { text-align: center; font-size: 14px; line-height: 18px; color: var(--textSecondary); }
+  .fab .sum { display: flex; flex-direction: column; min-width: 0; }
+
+  /* flat list rows (ListRow / acko-cb-row): 52px, hairline between, none after last */
+  .list { display: flex; flex-direction: column; }
+  .row { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 14px 0; border: 0; border-bottom: 1px solid var(--borderSoft); background: transparent; width: 100%; text-align: left; }
+  .row:last-child { border-bottom: 0; }
+  .row:active { background: var(--surfaceFillHover); }
+  .row .body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .row .t { font-size: 16px; line-height: 20px; font-weight: 400; color: var(--textPrimary); }
+  .row.sel .t, .row.on .t { font-weight: 500; }
+  .row .s { font-size: 14px; line-height: 18px; color: var(--textSecondary); }
+  .row .trail { flex: none; font-size: 16px; line-height: 20px; font-weight: 500; color: var(--textPrimary); }
+  .row .trail.q { color: var(--textSecondary); font-weight: 400; font-size: 14px; }
+  .row .chev { flex: none; width: 16px; height: 16px; color: var(--textSecondary); }
+  .row .media { flex: none; width: 36px; height: 36px; border-radius: var(--radiusLg); display: grid; place-items: center; font-size: 11px; font-weight: 700; color: #fff; letter-spacing: .3px; }
+  .row.card-row { padding: 16px; border: 1px solid var(--borderMedium); border-radius: var(--radius5xl); background: var(--surfaceFillDefault); margin-bottom: 12px; }
+  .row.card-row.sel { border-color: var(--brandPrimary); }
+  .row.card-row:last-child { margin-bottom: 0; }
+
+  /* controls, from @acko/css checkbox.css / radio.css / switch.css (md) */
+  .ctl { flex: none; width: 20px; height: 20px; display: grid; place-items: center; position: relative; }
+  .ctl::after { content: ""; position: absolute; inset: -14px; }
+  .cb { width: 20px; height: 20px; border-radius: var(--radiusMd); background: var(--surfaceFillDefault); border: 2px solid var(--borderMedium); display: grid; place-items: center; color: #fff; transition: background 150ms, border-color 150ms; }
+  .cb svg { width: 14px; height: 14px; opacity: 0; transform: scale(.3); transition: all 150ms var(--easeOutCubic); }
+  .row.sel .cb, .cb.on, .cb.ind { background: linear-gradient(var(--brandPrimary), var(--brandPrimary)) padding-box, linear-gradient(180deg, var(--brandHighlight), var(--brandPrimary)) border-box; border-color: transparent; }
+  .row.sel .cb svg, .cb.on svg { opacity: 1; transform: scale(1); }
+  .cb.ind::before { content: ""; width: 10px; height: 2px; background: #fff; border-radius: 1px; position: absolute; }
+  .rd { width: 20px; height: 20px; border-radius: 50%; background: var(--surfaceFillDefault); border: 2px solid var(--borderMedium); display: grid; place-items: center; transition: background 150ms, border-color 150ms; }
+  .rd::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #fff; opacity: 0; transform: scale(.4); transition: all 150ms var(--easeOutCubic); }
+  .row.sel .rd { background: linear-gradient(var(--brandPrimary), var(--brandPrimary)) padding-box, linear-gradient(180deg, var(--brandHighlight), var(--brandPrimary)) border-box; border-color: transparent; }
+  .row.sel .rd::after { opacity: 1; transform: scale(1); }
+  .sw { width: 44px; height: 24px; border-radius: var(--radiusFull); background: var(--surfaceFillSubtle); position: relative; transition: background 200ms; flex: none; }
+  .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.12); transition: transform 300ms cubic-bezier(.34,1.56,.64,1); }
+  .sw.on { background: var(--brandPrimary); }
+  .sw.on::after { transform: translateX(20px); }
+  .ctl.sw-wrap { width: 44px; height: 24px; }
+  .ctl.enter { animation: slidein .2s ease-out; }
+  @keyframes slidein { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
+  .lead-T .ctl.enter { animation-name: slidein-r; }
+  @keyframes slidein-r { from { opacity: 0; transform: translateX(8px); } to { opacity: 1; transform: none; } }
+
+  /* @acko/text-input md */
+  .search { display: flex; align-items: center; gap: 8px; padding: 0 14px; height: 48px; border: 1px solid var(--borderMedium); border-radius: var(--radius2xl); background: var(--surfaceFillDefault); }
+  .search input { flex: 1; border: 0; background: transparent; outline: 0; min-width: 0; font-size: 16px; }
+  .search svg { width: 18px; height: 18px; color: var(--textSecondary); flex: none; }
+  .selall { position: sticky; top: 0; z-index: 2; background: var(--surfaceBasePrimary); }
+  .selall .t { color: var(--textSecondary); font-weight: 500; font-size: 14px; }
+  .scroll { max-height: 440px; overflow: auto; }
+
+  /* inline note inside a screen (IDV-card style) */
+  .note { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--surfaceFillDefault); border: 1px solid var(--borderMedium); border-radius: var(--radius5xl); padding: 16px 20px; }
+  .tip { padding: 12px 16px; border-radius: var(--radius2xl); font-size: 14px; line-height: 18px; }
+  .tip.info { background: var(--statusInfoSubtle); color: var(--statusInfoText); }
+  .tip.good { background: var(--statusSuccessSubtle); color: var(--statusSuccessText); }
+  .tip.warn { background: var(--statusWarningSubtle); color: var(--statusWarningText); }
+  .success { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; padding: 8px 0 4px; }
+  .success .tick { width: 56px; height: 56px; border-radius: 50%; background: var(--statusSuccessSubtle); color: var(--statusSuccessText); display: grid; place-items: center; }
+  .success .tick svg { width: 28px; height: 28px; }
+  .toast { position: fixed; left: 50%; bottom: calc(120px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--textPrimary); color: #fff; padding: 10px 16px; border-radius: var(--radiusFull); font-size: 14px; z-index: 20; opacity: 0; transition: opacity .2s; pointer-events: none; white-space: nowrap; }
+  .toast.on { opacity: 1; }
+  .code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; line-height: 18px; background: var(--surfaceFillSubtle); border-radius: var(--radius2xl); padding: 12px; word-break: break-all; user-select: all; max-height: 140px; overflow: auto; }
+  textarea { width: 100%; min-height: 140px; font: 12px/18px ui-monospace, SFMono-Regular, Menlo, monospace; border: 1px solid var(--borderMedium); border-radius: var(--radius2xl); padding: 12px; resize: vertical; background: var(--surfaceFillDefault); }
+
+  /* @acko/table */
+  .tbl-wrap { overflow-x: auto; background: var(--surfaceFillDefault); border: 1px solid var(--borderMedium); border-radius: var(--radius5xl); }
+  table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; line-height: 18px; }
+  .tbl th, .tbl td { padding: 14px 16px; text-align: left; border-bottom: 1px solid var(--borderSoft); white-space: nowrap; }
+  .tbl tbody tr:last-child td { border-bottom: 0; }
+  .tbl th { font-weight: 500; color: var(--textSecondary); font-size: 13px; }
+  .tbl td.c, .tbl th.c { width: 52px; text-align: center; }
+  .tbl tr.sel td { background: var(--statusInfoSubtle); }
+  .tbl tbody tr:hover td { background: var(--surfaceFillHover); }
+  .tbl .ctl { margin: 0 auto; }
+  .tbl td.num, .tbl th.num { text-align: right; }
+  .tbl td.l { font-weight: 500; }
+
+  /* preference pair: two secondary cards */
+  .pair { display: grid; grid-template-columns: 1fr; gap: 12px; }
+  @media (min-width: 640px) { .pair { grid-template-columns: 1fr 1fr; } }
+  .pair .side { border: 1px solid var(--borderMedium); border-radius: var(--radius5xl); padding: 16px 20px; background: var(--surfaceFillDefault); cursor: pointer; display: flex; flex-direction: column; gap: 4px; transition: border-color .15s; }
+  .pair .side:hover { border-color: var(--brandRing); }
+  .pair .side .list { pointer-events: none; }
+
+  /* results */
+  .res-table { width: 100%; border-collapse: collapse; font-size: 14px; line-height: 18px; }
+  .res-table th, .res-table td { padding: 8px 10px; border-bottom: 1px solid var(--borderSoft); text-align: left; vertical-align: top; }
+  .res-table th { font-weight: 500; color: var(--textSecondary); font-size: 13px; }
+  .res-table td.num, .res-table th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .res-table tr.hl td { background: var(--statusInfoSubtle); }
+  .res-table .l { color: var(--textBrand); font-weight: 500; }
+  .kv { display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+
+<div id="app"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  'use strict';
+  const $app = document.getElementById('app');
+  // Google Sheet collection: paste the Apps Script web-app URL here (see Code.gs). Empty = code-only.
+  const SHEET_ENDPOINT = '';
+  const KEY = 'lp-study-v4';
+  const RKEY = 'lp-results-v3';
+
+  /* ---------- helpers ---------- */
+  const h = (tag, attrs, ...kids) => {
+    const el = document.createElement(tag);
+    if (attrs) for (const k in attrs) {
+      const v = attrs[k];
+      if (k === 'class') el.className = v;
+      else if (k === 'html') el.innerHTML = v;
+      else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+      else if (v !== null && v !== undefined && v !== false) el.setAttribute(k, v === true ? '' : v);
+    }
+    for (const kid of kids.flat(Infinity)) {
+      if (kid === null || kid === undefined || kid === false) continue;
+      el.append(kid.nodeType ? kid : document.createTextNode(String(kid)));
+    }
+    return el;
+  };
+  const rc = (el, ...kids) => el.replaceChildren(...kids.flat(Infinity).filter(k => k !== null && k !== undefined && k !== false));
+  const ICON_CHECK = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3 3 7-7"/></svg>';
+  const ICON_CHEV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
+  const ICON_BACK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>';
+  const ICON_ARROW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>';
+  const ICON_SEARCH = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="9" r="5.5"/><path d="M13.5 13.5L17 17"/></svg>';
+  const ICON_TICK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+  const now = () => performance.now();
+  const median = a => { if (!a.length) return null; const s = [...a].sort((x, y) => x - y); const m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+  const mean = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
+  const pct = (n, d) => d ? Math.round(100 * n / d) + '%' : '–';
+  const fmtS = ms => ms == null ? '–' : (ms / 1000).toFixed(1) + ' s';
+  const f1 = v => v == null ? '–' : v.toFixed(1);
+  const shuffle = a => { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
+  const setEq = (a, b) => a.length === b.length && a.every(x => b.includes(x));
+  let toastT;
+  const toast = msg => { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 1600); };
+  const load = k => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } };
+  const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+  const encode = obj => 'LP3-' + btoa(unescape(encodeURIComponent(JSON.stringify(obj)))).replace(/=+$/, '');
+  const decode = str => { const s = str.trim().replace(/^LP[23]-/, ''); return JSON.parse(decodeURIComponent(escape(atob(s)))); };
+  const isDesktop = () => window.matchMedia('(min-width: 768px)').matches;
+
+  /* ---------- state ---------- */
+  let S = load(KEY);
+  const fresh = () => ({
+    pid: Math.random().toString(36).slice(2, 8).toUpperCase(),
+    group: Math.random() < 0.5 ? 'A' : 'B',
+    device: isDesktop() ? 'desktop' : 'mobile',
+    env: { vw: window.innerWidth, vh: window.innerHeight, touch: window.matchMedia('(pointer: coarse)').matches ? 1 : 0,
+      os: /iPhone|iPad/.test(navigator.userAgent) ? 'ios' : /Android/.test(navigator.userAgent) ? 'android' : /Mac/.test(navigator.userAgent) ? 'mac' : /Win/.test(navigator.userAgent) ? 'win' : 'other' },
+    tasks: {}, prefs: {}, step: 0, started: new Date().toISOString()
+  });
+  if (!S || !S.pid) S = fresh();
+  const persist = () => save(KEY, S);
+  // Group A: leading on odd steps; B: leading on even. Everyone sees both placements, never the same screen twice.
+  const variantFor = n => ((n % 2 === 1) === (S.group === 'A')) ? 'L' : 'T';
+  const STEPS = () => { const s = ['welcome', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 't10']; if (S.device === 'desktop') s.push('t11'); s.push('pref', 'done'); return s; };
+
+  /* ---------- data ---------- */
+  const ADDONS = [
+    { id: 'zd', t: 'Zero depreciation', s: 'Full claim on parts, no depreciation cut', p: '₹1,240' },
+    { id: 'ep', t: 'Engine protect', s: 'Engine damage from water or oil leaks', p: '₹860' },
+    { id: 'rsa', t: 'Roadside assistance', s: 'Towing, flat tyre and battery help, 24×7', p: '₹199' },
+    { id: 'con', t: 'Consumables', s: 'Oil, nuts, bolts and other consumables', p: '₹420' },
+    { id: 'ncb', t: 'NCB protect', s: 'Keep your no-claim bonus after one claim', p: '₹650' },
+    { id: 'key', t: 'Key replacement', s: 'Lost or stolen keys replaced', p: '₹150' }
+  ];
+  const PAY = [
+    { id: 'hdfc-dc', t: 'HDFC Bank debit card', s: '•••• 9082', m: 'HDFC', c: '#1F3A93' },
+    { id: 'icici-cc', t: 'ICICI Bank credit card', s: '•••• 2210', m: 'ICICI', c: '#B02A30' },
+    { id: 'hdfc-cc', t: 'HDFC Bank credit card', s: '•••• 4471', m: 'HDFC', c: '#1F3A93' },
+    { id: 'sbi-dc', t: 'SBI debit card', s: '•••• 5536', m: 'SBI', c: '#22409A' },
+    { id: 'upi', t: 'UPI', s: 'rahul@okhdfcbank', m: 'UPI', c: '#0F9D58' },
+    { id: 'nb', t: 'Net banking', s: 'All major banks', m: 'NB', c: '#5B6470' }
+  ];
+  const NOTIF = [
+    { id: 'claim', t: 'Claim updates', s: 'Status changes on your claims', on: true },
+    { id: 'renew', t: 'Renewal reminders', s: '30, 7 and 1 day before expiry', on: true },
+    { id: 'offers', t: 'Offers and discounts', s: 'Never more than twice a month', on: false },
+    { id: 'pay', t: 'Payment receipts', s: 'Every successful payment', on: true },
+    { id: 'tips', t: 'Safety tips', s: 'Monthly driving and health tips', on: false }
+  ];
+  const POLICIES = [
+    { id: 'car', t: 'Car · Maruti Baleno', s: 'KA 05 MN 4471 · Renewed today' },
+    { id: 'bike', t: 'Bike · Honda Activa', s: 'KA 03 HG 2210 · Renews 4 Jan 2027' },
+    { id: 'health', t: 'Health · Family floater', s: '4 members · Renews 28 Feb 2027' },
+    { id: 'travel', t: 'Travel · Singapore', s: '5 days · Expired 20 Aug 2026' },
+    { id: 'term', t: 'Term life · ₹1 crore', s: 'Renews 15 Mar 2027' }
+  ];
+  const AREAS = ['HSR Layout', 'Koramangala', 'Indiranagar', 'Whitefield', 'Marathahalli', 'BTM Layout', 'Jayanagar', 'JP Nagar', 'Bellandur', 'Hebbal'];
+  const GNAMES = ['Sri Sai Motors', 'Auto Care Hub', 'Speedwell Garage', 'Bosch Car Service', 'Perfect Auto Works', 'Royal Motors', 'Om Auto Garage', 'Carnation Auto', 'Star Motors', 'City Auto Clinic', 'Prime Car Care', 'Wheels & Deals', 'Metro Auto Works', 'Precision Motors', 'Green Lane Garage', 'Highway Auto', 'Sunrise Motors', 'Elite Car Spa', 'Apex Auto Service', 'Lakshmi Motors', 'Fast Track Garage', 'Silver Line Auto', 'Nandi Motors', 'Trident Car Care', 'Vishnu Auto Works', 'Unity Motors', 'Brigade Auto Hub', 'Classic Car Care', 'Ganesh Garage', 'Tech Auto Works', 'Reliance Motors', 'Bharath Auto', 'Dhruva Car Care', 'Shakti Motors', 'Pioneer Garage', 'Skyline Auto', 'Balaji Motors', 'Ace Car Service', 'Modern Auto Works', 'Zen Garage'];
+  const GARAGES = GNAMES.map((n, i) => ({ id: 'g' + i, t: n, area: i % 7 === 2 ? 'HSR Layout' : AREAS[1 + (i % 9)], km: (1 + (i * 7) % 19) + '.' + (i % 9) + ' km' }));
+  const HSR = GARAGES.filter(g => g.area === 'HSR Layout').map(g => g.id);
+  const TROWS = [
+    { id: 'p1', t: 'ACKO-CAR-44712', type: 'Car', prem: '₹8,940', ren: '12 Oct 2026', st: 'Active' },
+    { id: 'p2', t: 'ACKO-HLT-90214', type: 'Health', prem: '₹21,300', ren: '28 Feb 2027', st: 'Active' },
+    { id: 'p3', t: 'ACKO-BKE-22105', type: 'Bike', prem: '₹1,260', ren: '4 Oct 2026', st: 'Active' },
+    { id: 'p4', t: 'ACKO-TRV-55361', type: 'Travel', prem: '₹1,840', ren: '20 Aug 2026', st: 'Expired' },
+    { id: 'p5', t: 'ACKO-CAR-10933', type: 'Car', prem: '₹11,200', ren: '15 Mar 2027', st: 'Active' },
+    { id: 'p6', t: 'ACKO-HLT-31877', type: 'Health', prem: '₹9,650', ren: '27 Oct 2026', st: 'Active' },
+    { id: 'p7', t: 'ACKO-BKE-78402', type: 'Bike', prem: '₹980', ren: '9 Dec 2026', st: 'Active' },
+    { id: 'p8', t: 'ACKO-TRM-64019', type: 'Term life', prem: '₹14,500', ren: '1 Jan 2027', st: 'Active' }
+  ];
+  const OCT = ['p1', 'p3', 'p6'];
+
+  /* ---------- DS pieces ---------- */
+  function ctl(kind, state) {
+    if (kind === 'switch') return h('span', { class: 'ctl sw-wrap' }, h('span', { class: 'sw' + (state ? ' on' : '') }));
+    if (kind === 'radio') return h('span', { class: 'ctl' }, h('span', { class: 'rd' }));
+    return h('span', { class: 'ctl' }, h('span', { class: 'cb' + (state === 'ind' ? ' ind' : ''), html: ICON_CHECK }));
+  }
+  function row(o) {
+    const kids = [];
+    const c = o.control ? ctl(o.control, o.on) : null;
+    if (c && o.enter) c.classList.add('enter');
+    if (c && o.variant === 'L') kids.push(c);
+    if (o.media) kids.push(o.media);
+    kids.push(h('span', { class: 'body' }, h('span', { class: 't' }, o.t), o.s ? h('span', { class: 's' }, o.s) : null));
+    if (o.trail) kids.push(h('span', { class: 'trail' + (o.trailQuiet ? ' q' : '') }, o.trail));
+    if (c && o.variant === 'T') kids.push(c);
+    if (o.chev) kids.push(h('span', { class: 'chev', html: ICON_CHEV }));
+    return h('button', { class: 'row' + (o.sel ? ' sel' : '') + (o.on ? ' on' : '') + (o.card ? ' card-row' : ''), type: 'button', 'data-id': o.id, 'aria-pressed': o.control && o.control !== 'switch' ? String(!!o.sel) : null }, kids);
+  }
+  const logo = p => h('span', { class: 'media', style: 'background:' + p.c }, p.m);
+  const tapTarget = ev => ev.target.closest('.ctl') ? 'control' : ev.target.closest('.trail') ? 'trailing' : ev.target.closest('.media') ? 'media' : 'row';
+  // MobileHeader: back chevron, title, subtitle (the step's instruction lives here, like a real helper line)
+  const hdr = (title, sub, extra) => h('header', { class: 'hdr' },
+    h('div', { class: 'back', html: ICON_BACK }),
+    h('div', { class: 'titles' }, h('h1', { class: 't-2xl' }, title), sub ? h('p', { class: 'goal' }, sub) : null, extra || null));
+  // floating action bar
+  const fab = (kids, opts) => h('div', { class: 'fab' }, h('div', { class: 'in' + (opts && opts.stack ? ' stack' : '') }, kids));
+  const primary = (label, onclick, opts) => h('button', { class: 'btn primary' + (opts && opts.full ? ' full' : '') + (opts && opts.md ? ' md' : ''), disabled: !!(opts && opts.disabled), onclick }, label, opts && opts.arrow !== false ? h('span', { html: ICON_ARROW }) : null);
+
+  /* ---------- implicit measures ---------- */
+  function newRun(n) { return { n, v: variantFor(n), t0: now(), tf: null, last: null, taps: 0, wrong: 0, undo: 0, dead: 0, ft: null, scr: 0, seen: {}, extra: {} }; }
+  function tap(run, target, wrong, id) {
+    const t = now();
+    if (run.tf == null) run.tf = Math.round(t - run.t0);
+    run.last = t; run.taps++;
+    if (!run.ft) run.ft = target;
+    if (wrong) run.wrong++;
+    if (id != null) { if (run.seen[id]) run.undo++; run.seen[id] = 1; }
+  }
+  function finishRun(run, ok) {
+    const t = now();
+    S.tasks['t' + run.n] = { v: run.v, ok: ok ? 1 : 0, t: Math.round(t - run.t0), tf: run.tf, taps: run.taps, wrong: run.wrong, undo: run.undo, dead: run.dead, ft: run.ft || 'none', gap: run.last ? Math.round(t - run.last) : null, scr: run.scr, ...run.extra };
+    persist();
+  }
+
+  /* ---------- chrome ---------- */
+  function page(content, opts) {
+    rc($app, h('main', { class: 'page' + (opts && opts.wide ? ' wide' : '') }, h('div', { class: 'col' }, content)));
+    window.scrollTo(0, 0);
+  }
+  function go(step) { S.step = step; persist(); render(); }
+  const next = () => go(S.step + 1);
+  function task(n, build) {
+    const run = newRun(n);
+    const finish = ok => { finishRun(run, ok); next(); };
+    const parts = build(run, finish);      // [screen content..., fab]
+    page(parts);
+    const main = $app.firstChild;
+    main.addEventListener('click', ev => { if (!ev.target.closest('.row, .btn, .ctl, input, th, .linkbtn')) run.dead++; });
+    main.addEventListener('scroll', () => run.scr++, true);
+  }
+
+  /* ---------- screens ---------- */
+  function welcome() {
+    page([
+      hdr('Renew your car insurance', null),
+      h('div', { class: 'card' },
+        h('div', null, h('h3', { class: 't-lg bold' }, 'A quick walk-through'), h('p', { class: 't-sm sec', style: 'margin-top:4px' }, 'This is a copy of the ACKO app with a made-up account. Go through it the way you normally would. Each screen tells you one small thing to do, right under its title.')),
+        h('p', { class: 't-sm sec' }, 'About 5 minutes. Nothing here is real, and no personal details are collected. At the end you get a short code to send back to Rahul.'),
+        primary('Start', () => next(), { full: true })),
+      h('p', { class: 't-sm ter', style: 'text-align:center' }, S.device === 'desktop' ? 'You are on a laptop. If you mostly use ACKO on your phone, open this link there instead.' : 'Do this once, on the phone you normally use.')
+    ]);
+  }
+
+
+  /* ---------- minimal text-only selection screens (the fuel-type pattern) ---------- */
+  function simpleRadio(n, title, goal, options, targetId) {
+    task(n, (run, finish) => {
+      let sel = null, first = null;
+      const list = h('div', { class: 'list lead-' + run.v });
+      const btn = primary('Continue', () => { run.extra.firstOk = first === targetId ? 1 : 0; finish(sel === targetId); }, { disabled: true });
+      const draw = () => {
+        rc(list, options.map(o => row({ id: o, t: o, control: 'radio', variant: run.v, sel: sel === o })));
+        list.querySelectorAll('.row').forEach(r => r.addEventListener('click', ev => {
+          const id = r.dataset.id; if (first == null) first = id;
+          tap(run, tapTarget(ev), id !== targetId, id); sel = id; btn.disabled = false; draw();
+        }));
+      };
+      draw();
+      return [hdr(title, goal), list, fab([h('span', { class: 'hint', style: 'flex:1;text-align:left' }, sel ? '' : 'Pick one to continue'), btn])];
+    });
+  }
+  function simpleCheck(n, title, goal, options, targetIds) {
+    task(n, (run, finish) => {
+      const sel = new Set();
+      const list = h('div', { class: 'list lead-' + run.v }); const count = h('span', { class: 't-sm sec' });
+      const draw = () => {
+        rc(list, options.map(o => row({ id: o, t: o, control: 'check', variant: run.v, sel: sel.has(o) })));
+        list.querySelectorAll('.row').forEach(r => r.addEventListener('click', ev => {
+          const id = r.dataset.id; const on = !sel.has(id); on ? sel.add(id) : sel.delete(id);
+          tap(run, tapTarget(ev), !(on && targetIds.includes(id)), id); draw();
+        }));
+        count.textContent = sel.size ? sel.size + ' selected' : 'Pick all that apply';
+      };
+      draw();
+      return [hdr(title, goal), list, fab([count, primary('Continue', () => finish(setEq([...sel], targetIds)))])];
+    });
+  }
+  const t1 = () => simpleRadio(1, "Select your car's fuel type", 'Your Baleno runs on petrol.', ['Petrol', 'Diesel', 'CNG', 'Electric'], 'Petrol');
+  const t2 = () => simpleCheck(2, 'Who drives this car?', 'You and your spouse both drive it.', ['Me', 'My spouse', 'My parent', 'A hired driver', 'Friends or relatives'], ['Me', 'My spouse']);
+  const t5 = () => simpleRadio(5, 'Any claims in the last year?', 'You did not make a claim last year.', ['Yes, one claim', 'Yes, more than one', 'No claims'], 'No claims');
+  const t10 = () => simpleRadio(10, 'Policy document language', 'You want the policy in Kannada.', ['English', 'Hindi', 'Kannada', 'Tamil', 'Telugu', 'Malayalam'], 'Kannada');
+
+  /* 3. Add-ons */
+  function t3() {
+    task(3, (run, finish) => {
+      const sel = new Set(); const target = ['zd', 'rsa'];
+      const list = h('div', { class: 'list lead-' + run.v }); const total = h('span', { class: 't-lg bold num' });
+      const draw = () => {
+        rc(list, ADDONS.map(a => row({ id: a.id, t: a.t, s: a.s, trail: a.p, control: 'check', variant: run.v, sel: sel.has(a.id) })));
+        list.querySelectorAll('.row').forEach(r => r.addEventListener('click', ev => {
+          const id = r.dataset.id; const on = !sel.has(id); on ? sel.add(id) : sel.delete(id);
+          tap(run, tapTarget(ev), !(on && target.includes(id)), id); draw();
+        }));
+        let sum = 0; ADDONS.forEach(a => { if (sel.has(a.id)) sum += parseInt(a.p.replace(/[^\d]/g, '')); });
+        total.textContent = '₹' + sum.toLocaleString('en-IN');
+      };
+      draw();
+      return [
+        hdr('Add-on covers', 'Add the same two covers you had last year.'),
+        h('div', { class: 'tip info' }, 'Last year you had Zero depreciation and Roadside assistance.'),
+        list,
+        fab([h('span', { class: 'sum' }, total, h('span', { class: 't-xs sec' }, 'Add-ons, + 18% GST')), primary('Continue', () => finish(setEq([...sel], target)))])
+      ];
+    });
+  }
+
+  /* 4. Review, one pre-selected wrong */
+  function t4() {
+    task(4, (run, finish) => {
+      const sel = new Set(['zd', 'key', 'rsa']); const target = ['zd', 'ep', 'rsa']; let firstFix = null;
+      const list = h('div', { class: 'list lead-' + run.v }); const count = h('span', { class: 't-sm sec' });
+      const draw = () => {
+        rc(list, ADDONS.map(a => row({ id: a.id, t: a.t, s: a.s, trail: a.p, control: 'check', variant: run.v, sel: sel.has(a.id) })));
+        list.querySelectorAll('.row').forEach(r => r.addEventListener('click', ev => {
+          const id = r.dataset.id; const on = !sel.has(id); on ? sel.add(id) : sel.delete(id);
+          const good = (on && target.includes(id)) || (!on && !target.includes(id));
+          if (good && firstFix == null) firstFix = Math.round(now() - run.t0);
+          tap(run, tapTarget(ev), !good, id); draw();
+        }));
+        count.textContent = sel.size + ' covers selected';
+      };
+      draw();
+      return [
+        hdr('Review your covers', 'Check the pre-selected covers. Fix anything wrong, then continue.'),
+        h('div', { class: 'tip warn' }, 'You asked for Zero depreciation, Engine protect and Roadside assistance. These were copied from your last policy.'),
+        list,
+        fab([count, primary('Looks right', () => { run.extra.fix = firstFix; finish(setEq([...sel], target)); })])
+      ];
+    });
+  }
+
+  /* 6. Payment, leading logos */
+  function t6() {
+    task(6, (run, finish) => {
+      let sel = null, first = null;
+      const list = h('div', { class: 'list lead-' + run.v });
+      const payBtn = primary('Pay ₹10,379', () => { run.extra.firstOk = first === 'hdfc-cc' ? 1 : 0; finish(sel === 'hdfc-cc'); }, { disabled: true });
+      const draw = () => {
+        rc(list, PAY.map(p => row({ id: p.id, t: p.t, s: p.s, media: logo(p), control: 'radio', variant: run.v, sel: sel === p.id })));
+        list.querySelectorAll('.row').forEach(r => r.addEventListener('click', ev => {
+          const id = r.dataset.id; if (first == null) first = id;
+          tap(run, tapTarget(ev), id !== 'hdfc-cc', id); sel = id; payBtn.disabled = false; draw();
+        }));
+      };
+      draw();
+      return [
+        hdr('Choose payment method', 'Pay with the card that gives you the cashback.'),
+        h('div', { class: 'tip good' }, '5% cashback on HDFC Bank credit cards this week.'),
+        list,
+        fab([h('span', { class: 'sum' }, h('span', { class: 't-lg bold num' }, '₹10,379'), h('span', { class: 't-xs sec' }, 'incl. 18% GST')), payBtn])
+      ];
+    });
+  }
+
+  /* 7. Payment success → notifications */
+  function t7() {
+    task(7, (run, finish) => {
+      const state = Object.fromEntries(NOTIF.map(x => [x.id, x.on]));
+      const list = h('div', { class: 'list lead-' + run.v });
+      const draw = () => {
+        rc(list, NOTIF.map(x => row({ id: x.id, t: x.t, s: x.s, control: 'switch', variant: run.v, on: state[x.id] })));
+        list.querySelectorAll('.row').forEach(r => r.addEventListener('click', ev => {
+          const id = r.dataset.id; state[id] = !state[id];
+          tap(run, tapTarget(ev), !(id === 'renew' && state[id] === false), id); draw();
+        }));
+      };
+      draw();
+      return [
+        h('div', { class: 'card' }, h('div', { class: 'success' }, h('span', { class: 'tick', html: ICON_TICK }), h('h1', { class: 't-2xl' }, 'Payment successful'), h('p', { class: 't-sm sec' }, 'Your Baleno is covered till 12 Oct 2027. Policy PDF is on its way to your email.'))),
+        h('div', { class: 'titles' }, h('h2', { class: 't-lg bold' }, 'Notifications'), h('p', { class: 'goal', style: 'margin-top:8px' }, 'You just renewed, so stop the renewal reminders. Leave the rest as they are.')),
+        list,
+        fab([primary('Save', () => finish(state.renew === false && state.claim && !state.offers && state.pay && !state.tips), { full: true })])
+      ];
+    });
+  }
+
+  /* 8. Documents: Select mode on the policy list */
+  function t8() {
+    task(8, (run, finish) => {
+      let mode = false; const sel = new Set(); const target = ['car', 'bike', 'health']; let navTaps = 0, enteredAt = null, enter = false;
+      const list = h('div', { class: 'list lead-' + run.v }); const bar = h('div', { class: 'note' }); const fabEl = fab([]);
+      const draw = () => {
+        rc(bar,
+          h('span', { class: 't-base medium' }, mode ? (sel.size + ' selected') : '5 policies'),
+          mode
+            ? h('span', { style: 'display:flex;gap:4px' }, h('button', { class: 'linkbtn', onclick: () => { sel.size === POLICIES.length ? sel.clear() : POLICIES.forEach(p => sel.add(p.id)); tap(run, 'selectall', true); draw(); } }, sel.size === POLICIES.length ? 'Clear' : 'Select all'), h('span', { class: 'ter' }, ' · '), h('button', { class: 'linkbtn', onclick: () => { mode = false; sel.clear(); draw(); } }, 'Cancel'))
+            : h('button', { class: 'linkbtn', onclick: () => { mode = true; enter = true; if (enteredAt == null) enteredAt = Math.round(now() - run.t0); tap(run, 'select-btn', false); draw(); enter = false; } }, 'Select'));
+        rc(list, POLICIES.map(p => row({ id: p.id, t: p.t, s: p.s, control: mode ? 'check' : null, variant: run.v, sel: sel.has(p.id), chev: !mode, enter })));
+        list.querySelectorAll('.row').forEach(r => r.addEventListener('click', ev => {
+          const id = r.dataset.id;
+          if (!mode) { navTaps++; tap(run, tapTarget(ev), true); toast('This would open the policy'); return; }
+          const on = !sel.has(id); on ? sel.add(id) : sel.delete(id);
+          tap(run, tapTarget(ev), !(on && target.includes(id)), id); draw();
+        }));
+        rc(fabEl.firstChild, mode
+          ? [h('span', { class: 't-sm sec' }, 'Sent as one PDF'), primary('Download (' + sel.size + ')', () => { run.extra.navTaps = navTaps; run.extra.modeAt = enteredAt; finish(setEq([...sel], target)); }, { disabled: sel.size === 0, arrow: false })]
+          : [h('span', { class: 'hint', style: 'width:100%' }, 'Tap a policy to open it')]);
+      };
+      draw();
+      return [hdr('My policies', 'Download the documents for your car, bike and health policies in one go.'), bar, list, fabEl];
+    });
+  }
+
+  /* 9. Garages: 40 rows, search, select-all on filtered */
+  function t9() {
+    task(9, (run, finish) => {
+      const sel = new Set(); let q = '', usedSearch = 0, usedAll = 0;
+      const list = h('div', { class: 'list scroll lead-' + run.v }); const count = h('span', { class: 't-sm sec num' });
+      const input = h('input', { type: 'search', id: 'garage-search', placeholder: 'Search by name or area', autocomplete: 'off' });
+      input.addEventListener('input', () => { q = input.value.trim().toLowerCase(); if (q) usedSearch = 1; draw(); });
+      const shown = () => GARAGES.filter(g => !q || g.t.toLowerCase().includes(q) || g.area.toLowerCase().includes(q));
+      const draw = () => {
+        const vis = shown(); const nSel = vis.filter(g => sel.has(g.id)).length;
+        const allState = vis.length && nSel === vis.length ? true : nSel ? 'ind' : false;
+        const all = row({ id: '__all', t: 'Select all' + (q ? ' (' + vis.length + ' shown)' : ''), control: 'check', variant: run.v, sel: allState === true });
+        if (allState === 'ind') all.querySelector('.cb').classList.add('ind');
+        all.classList.add('selall');
+        all.addEventListener('click', () => { usedAll = 1; tap(run, 'selectall', !q); allState === true ? vis.forEach(g => sel.delete(g.id)) : vis.forEach(g => sel.add(g.id)); draw(); });
+        rc(list, all, vis.map(g => row({ id: g.id, t: g.t, s: g.area, trail: g.km, trailQuiet: true, control: 'check', variant: run.v, sel: sel.has(g.id) })));
+        list.querySelectorAll('.row:not(.selall)').forEach(r => r.addEventListener('click', ev => {
+          const id = r.dataset.id; const on = !sel.has(id); on ? sel.add(id) : sel.delete(id);
+          tap(run, tapTarget(ev), !(on && HSR.includes(id)), id); draw();
+        }));
+        count.textContent = sel.size + ' selected';
+      };
+      draw();
+      const search = h('div', { class: 'search', html: ICON_SEARCH }); search.append(input);
+      return [
+        hdr('Preferred garages', 'Add every garage in HSR Layout to your preferred list.'),
+        search, list,
+        fab([count, primary('Save', () => { run.extra.usedSearch = usedSearch; run.extra.usedAll = usedAll; finish(setEq([...sel], HSR)); }, { arrow: false })])
+      ];
+    });
+  }
+
+  /* 11. Desktop only: table */
+  function t11() {
+    task(11, (run, finish) => {
+      const sel = new Set(); const tbody = h('tbody'); const headCb = h('th', { class: 'c', style: 'cursor:pointer' });
+      const cols = [h('th', null, 'Policy'), h('th', null, 'Type'), h('th', { class: 'num' }, 'Premium'), h('th', null, 'Renews on'), h('th', null, 'Status')];
+      const thead = h('thead', null, h('tr', null, run.v === 'L' ? [headCb, ...cols] : [...cols, headCb]));
+      const exportBtn = primary('Export CSV', () => finish(setEq([...sel], OCT)), { disabled: true, arrow: false });
+      const draw = () => {
+        const allOn = sel.size === TROWS.length;
+        rc(headCb, h('span', { class: 'ctl' }, h('span', { class: 'cb' + (allOn ? ' on' : sel.size ? ' ind' : ''), html: ICON_CHECK })));
+        headCb.onclick = () => { tap(run, 'selectall', true); allOn ? sel.clear() : TROWS.forEach(r => sel.add(r.id)); draw(); };
+        rc(tbody, TROWS.map(r => {
+          const cb = h('td', { class: 'c' }, h('span', { class: 'ctl' }, h('span', { class: 'cb' + (sel.has(r.id) ? ' on' : ''), html: ICON_CHECK })));
+          const cells = [h('td', { class: 'l' }, r.t), h('td', null, r.type), h('td', { class: 'num' }, r.prem), h('td', null, r.ren), h('td', null, h('span', { class: 'badge ' + (r.st === 'Active' ? 'green' : 'grey') }, r.st))];
+          const tr = h('tr', { class: sel.has(r.id) ? 'sel' : '', style: 'cursor:pointer' }, run.v === 'L' ? [cb, ...cells] : [...cells, cb]);
+          tr.addEventListener('click', ev => { const on = !sel.has(r.id); on ? sel.add(r.id) : sel.delete(r.id); tap(run, ev.target.closest('.ctl') ? 'control' : 'row', !(on && OCT.includes(r.id)), r.id); draw(); });
+          return tr;
+        }));
+        exportBtn.disabled = sel.size === 0; exportBtn.textContent = sel.size ? 'Export ' + sel.size + ' as CSV' : 'Export CSV';
+      };
+      draw();
+      return [
+        hdr('All policies', 'Export the policies that renew in October 2026.'),
+        h('div', { class: 'tbl-wrap' }, h('table', { class: 'tbl' }, thead, tbody)),
+        fab([h('span', { class: 't-sm sec' }, 'Exports include premium and renewal date'), exportBtn])
+      ];
+    });
+  }
+
+  /* preference: two pairs, one tap each */
+  function pref() {
+    const pairs = [
+      { id: 'list', title: 'Add-on covers', build: v => h('div', { class: 'list' }, ADDONS.slice(0, 3).map((a, i) => row({ id: a.id, t: a.t, s: a.s, trail: a.p, control: 'check', variant: v, sel: i !== 1 }))) },
+      { id: 'toggles', title: 'Notifications', build: v => h('div', { class: 'list' }, NOTIF.slice(0, 3).map(x => row({ id: x.id, t: x.t, s: x.s, control: 'switch', variant: v, on: x.on }))) }
+    ];
+    let i = 0;
+    const show = () => {
+      if (i >= pairs.length) { next(); return; }
+      const p = pairs[i]; const order = shuffle(['L', 'T']); const t0 = now();
+      page([
+        hdr('One last thing', 'Same ' + p.title.toLowerCase() + ' screen, two layouts. Which would you rather use? Tap one.'),
+        h('div', { class: 'pair' }, order.map((v, k) => h('div', { class: 'side', role: 'button', tabindex: '0', onclick: () => { S.prefs[p.id] = { pick: v, first: order[0], t: Math.round(now() - t0) }; persist(); i++; show(); } }, h('span', { class: 'badge grey' }, 'Option ' + (k + 1)), p.build(v)))),
+        h('p', { class: 't-sm ter', style: 'text-align:center' }, (i + 1) + ' of 2')
+      ]);
+    };
+    show();
+  }
+
+  async function sendToSheet(payload) {
+    if (!SHEET_ENDPOINT) return false;
+    try {
+      const res = await fetch(SHEET_ENDPOINT, { method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'text/plain;charset=utf-8' }, redirect: 'follow' });
+      const j = await res.json();
+      return !!(j && j.ok);
+    } catch (e) { return false; }
+  }
+  function done() {
+    const payload = { pid: S.pid, g: S.group, d: S.device, env: S.env, t: S.tasks, pr: S.prefs, at: new Date().toISOString().slice(0, 16) };
+    const code = encode(payload);
+    if (SHEET_ENDPOINT && !S.sent) {
+      // saving state: try the sheet first, show the code only if that fails
+      page([h('div', { class: 'card' }, h('div', { class: 'success' }, h('span', { class: 'tick', html: ICON_TICK }), h('h1', { class: 't-2xl' }, 'Thank you'), h('p', { class: 't-sm sec' }, 'Saving your answers…')))]);
+      sendToSheet(payload).then(ok => { if (ok) { S.sent = 1; persist(); } else { S.sendFailed = 1; persist(); } done(); });
+      return;
+    }
+    if (S.sent) {
+      page([
+        h('div', { class: 'card' }, h('div', { class: 'success' }, h('span', { class: 'tick', html: ICON_TICK }), h('h1', { class: 't-2xl' }, 'Thank you'), h('p', { class: 't-sm sec' }, 'Your answers are saved. You can close this page.')),
+          h('p', { class: 't-xs ter', style: 'text-align:center' }, 'Response ' + S.pid + ' · ' + (S.device === 'desktop' ? 'Laptop' : 'Phone'))),
+        h('p', { class: 't-sm ter', style: 'text-align:center' }, h('button', { class: 'linkbtn', onclick: () => { localStorage.removeItem(KEY); S = fresh(); render(); } }, 'Start over'), ' (only if you were testing the page)')
+      ]);
+      return;
+    }
+    const box = h('div', { class: 'code' }, code);
+    const copy = primary('Copy my code', () => {
+      const ok = () => { copy.textContent = 'Copied. Now send it to Rahul'; };
+      const fail = () => { const r = document.createRange(); r.selectNodeContents(box); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast('Select the code and copy it'); };
+      try { navigator.clipboard.writeText(code).then(ok, fail); } catch (e) { fail(); }
+    }, { full: true, arrow: false });
+    page([
+      h('div', { class: 'card' },
+        h('div', { class: 'success' }, h('span', { class: 'tick', html: ICON_TICK }), h('h1', { class: 't-2xl' }, 'Thank you'), h('p', { class: 't-sm sec' }, 'Copy the code below and send it to Rahul on WhatsApp, Slack or email. It only holds your taps and timings from this page.')),
+        box, copy,
+        h('p', { class: 't-xs ter', style: 'text-align:center' }, 'Response ' + S.pid + ' · ' + (S.device === 'desktop' ? 'Laptop' : 'Phone'))),
+      h('p', { class: 't-sm ter', style: 'text-align:center' }, h('button', { class: 'linkbtn', onclick: () => { localStorage.removeItem(KEY); S = fresh(); render(); } }, 'Start over'), ' (only if you were testing the page)')
+    ]);
+  }
+
+  /* ---------- results view (#results) ---------- */
+  function results() {
+    const ta = h('textarea', { id: 'codes', placeholder: 'Paste response codes here, one per line' });
+    ta.value = (load(RKEY) || []).join('\n');
+    const out = h('div', { style: 'display:flex;flex-direction:column;gap:16px' });
+    const TASKS = { t1: '1 · Fuel type (radio, text only)', t2: '2 · Who drives (checkbox, text only)', t3: '3 · Add-ons with prices', t4: '4 · Review, fix 2', t5: '5 · Claims last year (radio, text only)', t6: '6 · Payment with logos', t7: '7 · Toggle off reminders', t8: '8 · Bulk download', t9: '9 · Garages, 40 rows', t10: '10 · Document language (radio, text only)', t11: '11 · Data table (laptop)' };
+    const analyse = () => {
+      const lines = ta.value.split(/\s+/).map(s => s.trim()).filter(Boolean);
+      const rows = [], bad = [], seen = new Set();
+      lines.forEach(l => { try { const r = decode(l); if (r && r.pid && !seen.has(r.pid)) { seen.add(r.pid); rows.push(r); } } catch (e) { bad.push(l.slice(0, 10)); } });
+      save(RKEY, lines);
+      rc(out);
+      if (!rows.length) { out.append(h('p', { class: 'sec' }, 'No valid codes yet.' + (bad.length ? ' Could not read: ' + bad.join(', ') : ''))); return; }
+      const byDev = { mobile: rows.filter(r => r.d === 'mobile'), desktop: rows.filter(r => r.d === 'desktop') };
+      out.append(h('div', { class: 'kv t-sm' },
+        h('span', { class: 'sec' }, 'Responses'), h('span', null, rows.length + ' (' + byDev.mobile.length + ' phone, ' + byDev.desktop.length + ' laptop)' + (bad.length ? ' · ' + bad.length + ' unreadable' : '')),
+        h('span', { class: 'sec' }, 'Groups'), h('span', null, 'A ' + rows.filter(r => r.g === 'A').length + ' · B ' + rows.filter(r => r.g === 'B').length)));
+      const cell = (rs, k, v) => rs.map(r => r.t && r.t[k]).filter(x => x && x.v === v);
+      const stat = a => ({ n: a.length, ok: a.filter(x => x.ok).length, t: median(a.map(x => x.t)), tf: median(a.map(x => x.tf).filter(x => x != null)), wrong: mean(a.map(x => x.wrong)), undo: mean(a.map(x => x.undo)), dead: mean(a.map(x => x.dead)), gap: median(a.map(x => x.gap).filter(x => x != null)), ctl: a.filter(x => x.ft === 'control').length });
+      const verdicts = [];
+      for (const dev of ['mobile', 'desktop']) {
+        const rs = byDev[dev]; if (!rs.length) continue;
+        const tbl = h('table', { class: 'res-table' }, h('thead', null, h('tr', null, h('th', null, 'Task'), h('th', null, 'Placement'), h('th', { class: 'num' }, 'n'), h('th', { class: 'num' }, 'Success'), h('th', { class: 'num' }, 'Time'), h('th', { class: 'num' }, 'First tap'), h('th', { class: 'num' }, 'Wrong'), h('th', { class: 'num' }, 'Undo'), h('th', { class: 'num' }, 'Dead taps'), h('th', { class: 'num' }, 'Pause before finish'), h('th', { class: 'num' }, 'Tapped control'), h('th', null, 'More'))));
+        const tb = h('tbody'); tbl.append(tb);
+        Object.keys(TASKS).forEach(k => {
+          if (k === 't11' && dev === 'mobile') return;
+          const L = stat(cell(rs, k, 'L')), T = stat(cell(rs, k, 'T'));
+          if (!L.n && !T.n) return;
+          const more = v => {
+            const a = cell(rs, k, v); if (!a.length) return '';
+            if (k === 't4') return 'first fix ' + fmtS(median(a.map(x => x.fix).filter(x => x != null)));
+            if (['t1', 't5', 't6', 't10'].includes(k)) return 'first tap right ' + pct(a.filter(x => x.firstOk).length, a.length);
+            if (k === 't8') return 'found Select in ' + fmtS(median(a.map(x => x.modeAt).filter(x => x != null))) + ' · ' + a.reduce((s, x) => s + (x.navTaps || 0), 0) + ' row taps before it';
+            if (k === 't9') return 'search ' + pct(a.filter(x => x.usedSearch).length, a.length) + ' · select all ' + pct(a.filter(x => x.usedAll).length, a.length);
+            return '';
+          };
+          const better = L.n && T.n ? (L.ok / L.n > T.ok / T.n || (L.ok / L.n === T.ok / T.n && L.t < T.t) ? 'L' : (T.ok / T.n > L.ok / L.n || T.t < L.t) ? 'T' : null) : null;
+          [['L', L], ['T', T]].forEach(([v, s]) => tb.append(h('tr', { class: better === v ? 'hl' : '' },
+            v === 'L' ? h('td', { rowspan: '2' }, TASKS[k]) : null,
+            h('td', { class: v === 'L' ? 'l' : '' }, v === 'L' ? 'Leading' : 'Trailing'),
+            h('td', { class: 'num' }, s.n), h('td', { class: 'num' }, pct(s.ok, s.n)), h('td', { class: 'num' }, fmtS(s.t)), h('td', { class: 'num' }, fmtS(s.tf)),
+            h('td', { class: 'num' }, f1(s.wrong)), h('td', { class: 'num' }, f1(s.undo)), h('td', { class: 'num' }, f1(s.dead)), h('td', { class: 'num' }, fmtS(s.gap)), h('td', { class: 'num' }, pct(s.ctl, s.n)),
+            h('td', { class: 't-sm sec' }, more(v)))));
+          verdicts.push({ dev, k, better, L, T });
+        });
+        const low = Object.keys(TASKS).some(k => { const a = cell(rs, k, 'L').length, b = cell(rs, k, 'T').length; return (a && a < 8) || (b && b < 8); });
+        out.append(h('div', { class: 'card' }, h('h2', { class: 't-lg bold' }, dev === 'mobile' ? 'Phone' : 'Laptop'),
+          h('p', { class: 't-sm sec' }, 'Medians for times. Highlight = the placement that did better on success, then time. First tap = hesitation before the first tap. Undo = self-corrections. Dead taps = taps that hit nothing. Pause before finish = how sure they were. Tapped control = first tap landed on the control itself rather than the row.'),
+          h('div', { style: 'overflow-x:auto' }, tbl), low ? h('div', { class: 'tip warn' }, 'Fewer than 8 responses per placement in at least one cell. Read these as directional only.') : null));
+      }
+      const PR = { list: 'Add-on covers (checkboxes)', toggles: 'Notifications (toggles)' };
+      const ptb = h('tbody');
+      Object.keys(PR).forEach(k => {
+        const ps = rows.map(r => r.pr && r.pr[k]).filter(Boolean); const l = ps.filter(p => p.pick === 'L').length, t = ps.length - l;
+        ptb.append(h('tr', null, h('td', null, PR[k]), h('td', { class: 'num' + (l > t ? ' l' : '') }, l), h('td', { class: 'num' + (t > l ? ' l' : '') }, t), h('td', { class: 'num' }, fmtS(median(ps.map(p => p.t))))));
+      });
+      out.append(h('div', { class: 'card' }, h('h2', { class: 't-lg bold' }, 'Preference'), h('div', { style: 'overflow-x:auto' }, h('table', { class: 'res-table' }, h('thead', null, h('tr', null, h('th', null, 'Pair'), h('th', { class: 'num' }, 'Leading'), h('th', { class: 'num' }, 'Trailing'), h('th', { class: 'num' }, 'Time to decide'))), ptb))));
+      const vz = (name, keys, text) => {
+        const rel = verdicts.filter(v => keys.includes(v.k) && v.L.n && v.T.n);
+        if (!rel.length) return h('div', { class: 'tip warn' }, h('b', null, name + ': '), 'not enough data yet');
+        const lw = rel.filter(v => v.better === 'L').length, tw = rel.filter(v => v.better === 'T').length;
+        return h('div', { class: 'tip ' + (lw > tw ? 'good' : tw > lw ? 'warn' : 'info') }, h('b', null, name + ': '), (lw > tw ? 'leading ahead' : tw > lw ? 'trailing ahead' : 'mixed') + ' (' + lw + ' vs ' + tw + ' cells). ' + text);
+      };
+      out.append(h('div', { class: 'card' }, h('h2', { class: 't-lg bold' }, 'Against the hypotheses'),
+        vz('H0 plain lists, text only (tasks 1, 2, 5, 10)', ['t1', 't2', 't5', 't10'], 'The cleanest comparison: nothing on the row but a label and the control.'),
+        vz('H1 scan and verify (tasks 3, 4, 9)', ['t3', 't4', 't9'], 'Task 4 is the cleanest: time to first fix is pure scanning.'),
+        vz('H2 trailing with logos (task 6)', ['t6'], 'Also compare first-tap accuracy in More.'),
+        vz('H3 mis-taps against prices (task 3)', ['t3'], 'Look at Wrong and Dead taps.'),
+        vz('H4 leading toggles misread (task 7)', ['t7'], 'A misread shows up as hesitation, wrong toggles and undo.'),
+        vz('H5 bulk select (tasks 8, 11)', ['t8', 't11'], 'Supported when leading wins.'),
+        h('div', { class: 'tip info' }, h('b', null, 'H6 preference follows performance: '), 'compare the preference table with the highlighted rows. If people prefer the placement they were slower on, habit is driving the vote.')));
+      out.append(h('button', { class: 'btn secondary md', onclick: () => {
+        const head = ['pid', 'device', 'group', 'os', 'touch', 'task', 'variant', 'ok', 'time_ms', 'first_tap_ms', 'taps', 'wrong', 'undo', 'dead', 'first_target', 'gap_ms', 'scrolls', 'extra'];
+        const base = ['v', 'ok', 't', 'tf', 'taps', 'wrong', 'undo', 'dead', 'ft', 'gap', 'scr'];
+        const lines = [head.join(',')];
+        rows.forEach(r => Object.keys(r.t || {}).forEach(k => { const x = r.t[k]; const extra = Object.keys(x).filter(f => !base.includes(f)).map(f => f + '=' + JSON.stringify(x[f])).join(';'); lines.push([r.pid, r.d, r.g, r.env.os, r.env.touch, k, x.v, x.ok, x.t, x.tf, x.taps, x.wrong, x.undo, x.dead, x.ft, x.gap, x.scr, extra].map(v => '"' + String(v ?? '').replace(/"/g, '""') + '"').join(',')); }));
+        try { navigator.clipboard.writeText(lines.join('\n')).then(() => toast('CSV copied'), () => toast('Copy failed')); } catch (e) { toast('Copy failed'); }
+      } }, 'Copy CSV of all task rows'));
+    };
+    page([
+      h('div', { class: 'card' },
+        h('h1', { class: 't-2xl' }, 'Placement study results'),
+        h('p', { class: 't-sm sec' }, 'Paste the response codes people sent you, one per line. Codes stay in this browser only.'),
+        ta,
+        h('div', { style: 'display:flex;gap:8px;flex-wrap:wrap' }, h('button', { class: 'btn primary md', onclick: analyse }, 'Analyse'), h('button', { class: 'btn ghost md', onclick: () => { location.hash = ''; } }, 'Back to the study'))),
+      out
+    ], { wide: true });
+    if (ta.value.trim()) analyse();
+  }
+
+  /* ---------- router ---------- */
+  function render() {
+    if (location.hash === '#results') { results(); return; }
+    const steps = STEPS();
+    if (S.step >= steps.length) S.step = steps.length - 1;
+    ({ welcome, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, pref, done })[steps[S.step]]();
+  }
+  window.addEventListener('hashchange', render);
+  render();
+})();
+</script>
