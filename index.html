@@ -71,8 +71,10 @@
   .hdr .titles { display: flex; flex-direction: column; gap: 8px; }
   .hdr .sub { font-size: 14px; line-height: 18px; font-weight: 500; color: var(--textSecondary); }
 
-  /* the step's instruction: reads as the screen's own helper line, not a study widget */
-  .goal { font-size: 14px; line-height: 18px; font-weight: 500; color: var(--textPrimary); }
+  /* the step's instruction: a clear task card, in brand tint so it can't be missed */
+  .goal { display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; border-radius: var(--radius2xl); background: var(--brandSubtle); border-left: 4px solid var(--brandPrimary); }
+  .goal .lbl { font-size: 11px; line-height: 16px; font-weight: 600; letter-spacing: .5px; text-transform: uppercase; color: var(--statusInfoText); }
+  .goal .txt { font-size: 17px; line-height: 24px; font-weight: 500; color: var(--textPrimary); }
 
   /* @acko/card secondary: white, hairline, 24px radius */
   .card { background: var(--surfaceFillDefault); border: 1px solid var(--borderMedium); border-radius: var(--radius5xl); padding: 20px; display: flex; flex-direction: column; gap: 16px; }
@@ -325,7 +327,7 @@
     },
     2: {
       name: 'bike', vehicle: 'Activa', plate: 'KA 03 HG 2210', title: 'Renew your bike insurance',
-      intro: 'Now your Honda Activa. Same idea: one small thing to do on each screen, shown under the title.',
+      intro: 'Now your Honda Activa. Same idea: the purple box on each screen tells you the one thing to do.',
       usage: { title: 'How is your Activa used?', goal: 'You ride it to work every day.', options: ['Daily commute', 'Weekends only', 'Delivery work', 'Rarely'], target: 'Daily commute' },
       drivers: { title: 'Who rides this bike?', goal: 'You and your son both ride it.', options: ['Me', 'My spouse', 'My son or daughter', 'A delivery rider', 'Friends or relatives'], target: ['Me', 'My son or daughter'] },
       addons: { items: [
@@ -383,7 +385,8 @@
   }
   const logo = p => h('span', { class: 'media', style: 'background:' + p.c }, p.m);
   const tapTarget = ev => ev.target.closest('.ctl') ? 'control' : ev.target.closest('.trail') ? 'trailing' : ev.target.closest('.media') ? 'media' : 'row';
-  const hdr = (title, sub) => h('header', { class: 'hdr' }, h('div', { class: 'back', html: ICON_BACK }), h('div', { class: 'titles' }, h('h1', { class: 't-2xl' }, title), sub ? h('p', { class: 'goal' }, sub) : null));
+  const goalCard = text => h('div', { class: 'goal', role: 'note' }, h('span', { class: 'lbl' }, 'Your task'), h('p', { class: 'txt' }, text));
+  const hdr = (title, sub) => h('header', { class: 'hdr' }, h('div', { class: 'back', html: ICON_BACK }), h('div', { class: 'titles' }, h('h1', { class: 't-2xl' }, title), sub ? goalCard(sub) : null));
   const fab = kids => h('div', { class: 'fab' }, h('div', { class: 'in' }, kids));
   const primary = (label, onclick, opts) => h('button', { class: 'btn primary' + (opts && opts.full ? ' full' : '') + (opts && opts.md ? ' md' : ''), disabled: !!(opts && opts.disabled), onclick }, label, opts && opts.arrow !== false ? h('span', { html: ICON_ARROW }) : null);
 
@@ -424,7 +427,7 @@
     page([
       hdr(J[1].title, null),
       h('div', { class: 'card' },
-        h('div', null, h('h3', { class: 't-lg bold' }, 'Two quick renewals'), h('p', { class: 't-sm sec', style: 'margin-top:4px' }, 'This is a copy of the ACKO app with a made-up account: a car and a bike. Renew both, the way you normally would. Each screen tells you one small thing to do, right under its title.')),
+        h('div', null, h('h3', { class: 't-lg bold' }, 'Two quick renewals'), h('p', { class: 't-sm sec', style: 'margin-top:4px' }, 'This is a copy of the ACKO app with a made-up account: a car and a bike. Renew both, the way you normally would. Each screen has a purple \u201cYour task\u201d box at the top telling you the one thing to do there.')),
         h('p', { class: 't-sm sec' }, 'About 7 minutes. Nothing here is real, and no personal details are collected. Your taps are saved automatically at the end.'),
         primary('Start', () => next(), { full: true })),
       h('p', { class: 't-sm ter', style: 'text-align:center' }, S.device === 'desktop' ? 'You are on a laptop. If you mostly use ACKO on your phone, open this link there instead.' : 'Do this once, on the phone you normally use.')
@@ -518,7 +521,7 @@
     const ok = () => c.items.every(x => state[x.id] === (x.id === c.target ? false : x.on));
     return [
       h('div', { class: 'card' }, h('div', { class: 'success' }, h('span', { class: 'tick', html: ICON_TICK }), h('h1', { class: 't-2xl' }, 'Payment successful'), h('p', { class: 't-sm sec' }, c.success))),
-      h('div', { class: 'titles' }, h('h2', { class: 't-lg bold' }, 'Notifications'), h('p', { class: 'goal', style: 'margin-top:8px' }, c.goal)),
+      h('div', { class: 'titles' }, h('h2', { class: 't-lg bold' }, 'Notifications'), goalCard(c.goal)),
       list, fab([primary('Save', () => finish(ok()), { full: true })])];
   });
 
