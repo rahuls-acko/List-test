@@ -120,6 +120,11 @@
   .row .trail.q { color: var(--textSecondary); font-weight: 400; font-size: 14px; }
   .row .chev { flex: none; width: 16px; height: 16px; color: var(--textSecondary); }
   .row .media { flex: none; width: 36px; height: 36px; border-radius: var(--radiusLg); display: grid; place-items: center; font-size: 11px; font-weight: 700; color: #fff; letter-spacing: .3px; }
+  /* rows with a description: control and logo sit on the title line (DS rule), price stays centred */
+  .row:has(.s) { align-items: flex-start; }
+  .row:has(.s) .ctl, .row:has(.s) .media { margin-top: 0; }
+  .row:has(.s) .ctl.sw-wrap { margin-top: -2px; }
+  .row:has(.s) .trail { align-self: center; }
   .row.card-row { padding: 16px; border: 1px solid var(--borderMedium); border-radius: var(--radius5xl); background: var(--surfaceFillDefault); margin-bottom: 12px; }
   .row.card-row.sel { border-color: var(--brandPrimary); }
   .row.card-row:last-child { margin-bottom: 0; }
