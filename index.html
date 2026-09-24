@@ -187,6 +187,10 @@
   .pair .side { border: 1px solid var(--borderMedium); border-radius: var(--radius5xl); padding: 16px 20px; background: var(--surfaceFillDefault); cursor: pointer; display: flex; flex-direction: column; gap: 4px; transition: border-color .15s; }
   .pair .side:hover { border-color: var(--brandRing); }
   .pair .side .list { pointer-events: none; }
+  .pair .side.sel { border-color: var(--brandPrimary); }
+  .pair .side.sel .rd { background: linear-gradient(var(--brandPrimary), var(--brandPrimary)) padding-box, linear-gradient(180deg, var(--brandHighlight), var(--brandPrimary)) border-box; border-color: transparent; }
+  .pair .side.sel .rd::after { opacity: 1; transform: scale(1); }
+  .side-head { display: flex; align-items: center; gap: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--borderSoft); margin-bottom: 4px; }
 
   /* results */
   .res-table { width: 100%; border-collapse: collapse; font-size: 14px; line-height: 18px; }
@@ -604,11 +608,16 @@
     let i = 0;
     const show = () => {
       if (i >= pairs.length) { next(); return; }
-      const p = pairs[i]; const order = shuffle(['L', 'T']); const t0 = now();
+      const p = pairs[i]; const order = shuffle(['L', 'T']); const t0 = now(); let pick = null;
+      const btn = primary('Continue', () => { S.prefs[p.id] = { pick, first: order[0], t: Math.round(now() - t0) }; persist(); i++; show(); }, { disabled: true });
+      const sides = order.map((v, k) => h('div', { class: 'side', role: 'radio', tabindex: '0', 'aria-checked': 'false', onclick: () => { pick = v; sides.forEach((el, n) => { el.classList.toggle('sel', n === k); el.setAttribute('aria-checked', String(n === k)); }); btn.disabled = false; } },
+        h('div', { class: 'side-head' }, h('span', { class: 'ctl' }, h('span', { class: 'rd' })), h('span', { class: 't-base bold' }, 'Option ' + (k + 1))),
+        p.build(v)));
       page([
-        hdr('One last thing', 'Same ' + p.title + ' screen, two layouts. Which would you rather use? Tap one.'),
-        h('div', { class: 'pair' }, order.map((v, k) => h('div', { class: 'side', role: 'button', tabindex: '0', onclick: () => { S.prefs[p.id] = { pick: v, first: order[0], t: Math.round(now() - t0) }; persist(); i++; show(); } }, h('span', { class: 'badge grey' }, 'Option ' + (k + 1)), p.build(v)))),
-        h('p', { class: 't-sm ter', style: 'text-align:center' }, (i + 1) + ' of 2')
+        hdr('One last thing', 'Same ' + p.title + ' screen, two layouts. Which would you rather use?'),
+        h('div', { class: 'pair' }, sides),
+        h('p', { class: 't-sm ter', style: 'text-align:center' }, (i + 1) + ' of 2'),
+        fab([h('span', { class: 'hint', style: 'flex:1;text-align:left' }, 'Pick one to continue'), btn])
       ]);
     };
     show();
