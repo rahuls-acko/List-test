@@ -672,13 +672,43 @@
     ta.value = (load(RKEY) || []).join('\n');
     const out = h('div', { style: 'display:flex;flex-direction:column;gap:16px' });
     const TASKS = { t1: '1 · Fuel type (radio, text only)', t2: '2 · Who drives (checkbox, text only)', t3: '3 · Add-ons with prices', t4: '4 · Review, fix 2', t5: '5 · Claims last year (radio, text only)', t6: '6 · Payment with logos', t7: '7 · Toggle off reminders', t8: '8 · Bulk download', t9: '9 · Garages, 40 rows', t10: '10 · Document language (radio, text only)', t11: '11 · Data table (laptop)' };
-    const analyse = () => {
-      const lines = ta.value.split(/\s+/).map(s => s.trim()).filter(Boolean);
-      const rows = [], bad = [], seen = new Set();
-      lines.forEach(l => { try { const r = decode(l); if (r && r.pid && !seen.has(r.pid)) { seen.add(r.pid); rows.push(r); } } catch (e) { bad.push(l.slice(0, 10)); } });
-      save(RKEY, lines);
+    const status = h('p', { class: 't-sm sec' });
+    // rebuild the per-participant shape from the Sheet's two flat tabs
+    const fromSheet = data => {
+      const by = {};
+      (data.responses || []).forEach(r => { by[r.pid] = { pid: String(r.pid), g: r.group, d: r.device, env: { os: r.os, touch: r.touch }, at: r.finished_at, t: {}, pr: {
+        list: r.pref_list ? { pick: r.pref_list, first: r.pref_list_first, t: +r.pref_list_ms || null } : null,
+        toggles: r.pref_toggles ? { pick: r.pref_toggles, first: r.pref_toggles_first, t: +r.pref_toggles_ms || null } : null } }; });
+      const n = x => (x === '' || x == null) ? null : +x;
+      (data.tasks || []).forEach(r => {
+        const p = by[r.pid] || (by[r.pid] = { pid: String(r.pid), g: r.group, d: r.device, env: {}, t: {}, pr: {} });
+        p.t[r.task] = { v: r.placement === 'leading' ? 'L' : 'T', ok: +r.success, t: n(r.time_ms), tf: n(r.first_tap_ms), taps: n(r.taps), wrong: n(r.wrong), undo: n(r.undo), dead: n(r.dead_taps), ft: r.first_target, gap: n(r.pause_before_finish_ms), scr: n(r.scrolls),
+          firstOk: n(r.first_tap_correct), fix: n(r.first_fix_ms), modeAt: n(r.found_select_ms), navTaps: n(r.row_taps_before_select), usedSearch: n(r.used_search), usedAll: n(r.used_select_all) };
+      });
+      return Object.values(by).filter(p => p.d !== 'test' && !/^TEST/.test(p.pid));
+    };
+    const loadSheet = async () => {
+      if (!SHEET_ENDPOINT) { status.textContent = 'No Sheet connected on this copy of the page.'; return; }
+      status.textContent = 'Loading from the Sheet…';
+      try {
+        const res = await fetch(SHEET_ENDPOINT + '?data=1', { redirect: 'follow' });
+        const data = await res.json();
+        const rows = fromSheet(data);
+        const last = (data.responses || []).map(r => r.received_at).filter(Boolean).sort().pop();
+        status.textContent = rows.length + ' responses in the Sheet' + (last ? ', last received ' + new Date(last).toLocaleString() : '') + '. Test rows are ignored.';
+        analyse(rows);
+      } catch (e) { status.textContent = 'Could not read the Sheet. If Code.gs was updated, redeploy it as a new version.'; }
+    };
+    const analyse = (given) => {
+      let rows = given, bad = [];
+      if (!rows) {
+        const lines = ta.value.split(/\s+/).map(s => s.trim()).filter(Boolean);
+        rows = []; const seen = new Set();
+        lines.forEach(l => { try { const r = decode(l); if (r && r.pid && !seen.has(r.pid)) { seen.add(r.pid); rows.push(r); } } catch (e) { bad.push(l.slice(0, 10)); } });
+        save(RKEY, lines);
+      }
       rc(out);
-      if (!rows.length) { out.append(h('p', { class: 'sec' }, 'No valid codes yet.' + (bad.length ? ' Could not read: ' + bad.join(', ') : ''))); return; }
+      if (!rows.length) { out.append(h('p', { class: 'sec' }, 'Nothing to show yet.' + (bad.length ? ' Could not read: ' + bad.join(', ') : ''))); return; }
       const byDev = { mobile: rows.filter(r => r.d === 'mobile'), desktop: rows.filter(r => r.d === 'desktop') };
       out.append(h('div', { class: 'kv t-sm' },
         h('span', { class: 'sec' }, 'Responses'), h('span', null, rows.length + ' (' + byDev.mobile.length + ' phone, ' + byDev.desktop.length + ' laptop)' + (bad.length ? ' · ' + bad.length + ' unreadable' : '')),
@@ -748,12 +778,14 @@
     page([
       h('div', { class: 'card' },
         h('h1', { class: 't-2xl' }, 'Placement study results'),
-        h('p', { class: 't-sm sec' }, 'Paste the response codes people sent you, one per line. Codes stay in this browser only.'),
+        h('p', { class: 't-sm sec' }, 'Load everything collected so far straight from the Google Sheet, or paste response codes from people whose save failed.'),
+        h('div', { style: 'display:flex;gap:8px;flex-wrap:wrap' }, h('button', { class: 'btn primary md', onclick: loadSheet }, 'Load from Sheet'), h('button', { class: 'btn ghost md', onclick: () => { location.hash = ''; } }, 'Back to the study')),
+        status,
         ta,
-        h('div', { style: 'display:flex;gap:8px;flex-wrap:wrap' }, h('button', { class: 'btn primary md', onclick: analyse }, 'Analyse'), h('button', { class: 'btn ghost md', onclick: () => { location.hash = ''; } }, 'Back to the study'))),
+        h('button', { class: 'btn secondary md', onclick: () => analyse() }, 'Analyse pasted codes')),
       out
     ], { wide: true });
-    if (ta.value.trim()) analyse();
+    if (SHEET_ENDPOINT) loadSheet(); else if (ta.value.trim()) analyse();
   }
 
   /* ---------- router ---------- */

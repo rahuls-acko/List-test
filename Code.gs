@@ -65,6 +65,23 @@ function doPost(e) {
 function v(x) { return x === undefined || x === null ? '' : x; }
 
 // Opening the web-app URL in a browser shows this, which confirms the deployment works.
-function doGet() {
+// With ?data=1 it returns every row of both tabs as JSON, for the page's #results view.
+function doGet(e) {
+  if (e && e.parameter && e.parameter.data === '1') {
+    var out = { responses: readAll('Responses'), tasks: readAll('Tasks') };
+    return ContentService.createTextOutput(JSON.stringify(out)).setMimeType(ContentService.MimeType.JSON);
+  }
   return ContentService.createTextOutput('Placement Study collector is running.');
+}
+
+function readAll(name) {
+  var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(name);
+  if (!sh || sh.getLastRow() < 2) return [];
+  var vals = sh.getDataRange().getValues();
+  var head = vals[0];
+  return vals.slice(1).map(function (r) {
+    var o = {};
+    head.forEach(function (k, i) { var x = r[i]; o[k] = x instanceof Date ? x.toISOString() : x; });
+    return o;
+  });
 }
