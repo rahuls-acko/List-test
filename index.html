@@ -678,7 +678,7 @@
     const n = x => (x === '' || x == null) ? null : +x;
     const fromSheet = data => {
       const by = {};
-      (data.responses || []).forEach(r => { by[r.pid] = { pid: String(r.pid), order: r.order, d: r.device, env: { os: r.os }, t: {}, pr: {
+      (data.responses || []).forEach(r => { by[r.pid] = { pid: String(r.pid), order: r.order, d: r.device, env: { os: r.os }, at: r.received_at || r.finished_at || '', t: {}, pr: {
         list: r.pref_list ? { pick: r.pref_list, first: r.pref_list_first, t: n(r.pref_list_ms) } : null,
         toggles: r.pref_toggles ? { pick: r.pref_toggles, first: r.pref_toggles_first, t: n(r.pref_toggles_ms) } : null } }; });
       (data.tasks || []).forEach(r => {
@@ -825,7 +825,7 @@
         h('div', { style: 'overflow-x:auto' }, h('table', { class: 'res-table' }, h('thead', null, h('tr', null, h('th', null, 'Include'), h('th', null, 'Run'), h('th', null, 'Device'), h('th', null, 'Order'), h('th', null, 'Finished'), h('th', { class: 'num' }, 'Screens'), h('th', { class: 'num' }, 'Total time'), h('th', { class: 'num' }, 'Wrong taps'))),
           h('tbody', null, all.map(r => { const ts = Object.values(r.t || {}); const cb = h('input', { type: 'checkbox', id: 'inc-' + r.pid }); cb.checked = !ex.has(r.pid);
             cb.addEventListener('change', () => { const e = excluded(); cb.checked ? e.delete(r.pid) : e.add(r.pid); save('lp-exclude', [...e]); analyse(all); });
-            return h('tr', { class: ex.has(r.pid) ? 'sec' : '' }, h('td', null, cb), h('td', null, r.pid), h('td', null, r.d === 'mobile' ? 'Phone' : r.d === 'desktop' ? 'Laptop' : r.d), h('td', null, r.order === 'LT' ? 'left → right' : r.order === 'TL' ? 'right → left' : '–'), h('td', null, r.at ? String(r.at).replace('T', ' ').slice(0, 16) : '–'), h('td', { class: 'num' }, ts.length), h('td', { class: 'num' }, fmtS(ts.reduce((s, x) => s + (x.t || 0), 0))), h('td', { class: 'num' }, ts.reduce((s, x) => s + (x.wrong || 0), 0))); })))));
+            return h('tr', { class: ex.has(r.pid) ? 'sec' : '' }, h('td', null, cb), h('td', null, r.pid), h('td', null, r.d === 'mobile' ? 'Phone' : r.d === 'desktop' ? 'Laptop' : r.d), h('td', null, r.order === 'LT' ? 'left → right' : r.order === 'TL' ? 'right → left' : '–'), h('td', null, r.at ? new Date(r.at).toLocaleString(undefined, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '–'), h('td', { class: 'num' }, ts.length), h('td', { class: 'num' }, fmtS(ts.reduce((s, x) => s + (x.t || 0), 0))), h('td', { class: 'num' }, ts.reduce((s, x) => s + (x.wrong || 0), 0))); })))));
       out.append(runs);
       out.append(h('button', { class: 'btn secondary md', onclick: () => {
         const head = ['pid', 'device', 'order', 'os', 'journey', 'screen', 'placement', 'ok', 'time_ms', 'first_tap_ms', 'taps', 'wrong', 'undo', 'dead', 'first_target', 'gap_ms', 'scrolls'];
