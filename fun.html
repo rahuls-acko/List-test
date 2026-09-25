@@ -266,6 +266,10 @@
   const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
   const encode = obj => 'FUN-' + btoa(unescape(encodeURIComponent(JSON.stringify(obj)))).replace(/=+$/, '');
   const decode = str => { const s = str.trim().replace(/^FUN-/, ''); return JSON.parse(decodeURIComponent(escape(atob(s)))); };
+  // forgiving search: each typed word must be close to some word in the row (prefix, or within 2 edits)
+  const lev = (a, b) => { const m = a.length, n = b.length; if (!m) return n; if (!n) return m; let prev = Array.from({ length: n + 1 }, (_, i) => i); for (let i = 1; i <= m; i++) { const cur = [i]; for (let j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); prev = cur; } return prev[n]; };
+  const norm = s => s.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(Boolean);
+  const fuzzyMatch = (q, text) => { const words = norm(text); return norm(q).every(w => words.some(t => t.startsWith(w) || lev(w, t) <= (w.length > 4 ? 2 : 1))); };
   const isDesktop = () => window.matchMedia('(min-width: 768px)').matches;
 
   /* ---------- state ----------
@@ -581,7 +585,7 @@
     const list = h('div', { class: 'list scroll lead-' + run.v }); const count = h('span', { class: 't-sm sec num' });
     const input = h('input', { type: 'search', id: 'garage-search-' + j, placeholder: c.placeholder, autocomplete: 'off' });
     input.addEventListener('input', () => { q = input.value.trim().toLowerCase(); if (q) usedSearch = 1; draw(); });
-    const shown = () => c.list.filter(g => !q || g.t.toLowerCase().includes(q) || g.area.toLowerCase().includes(q));
+    const shown = () => c.list.filter(g => !q || fuzzyMatch(q, g.t + ' ' + g.area));
     const draw = () => {
       const vis = shown(); const nSel = vis.filter(g => sel.has(g.id)).length;
       const allState = vis.length && nSel === vis.length ? true : nSel ? 'ind' : false;
