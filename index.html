@@ -262,7 +262,7 @@
   // forgiving search: each typed word must be close to some word in the row (prefix, or within 2 edits)
   const lev = (a, b) => { const m = a.length, n = b.length; if (!m) return n; if (!n) return m; let prev = Array.from({ length: n + 1 }, (_, i) => i); for (let i = 1; i <= m; i++) { const cur = [i]; for (let j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); prev = cur; } return prev[n]; };
   const norm = s => s.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(Boolean);
-  const fuzzyMatch = (q, text) => { const words = norm(text); return norm(q).every(w => words.some(t => t.startsWith(w) || lev(w, t) <= (w.length > 4 ? 2 : 1))); };
+  const fuzzyMatch = (q, text) => { const words = norm(text); if (words.join('').includes(norm(q).join(''))) return true; return norm(q).every(w => words.some(t => t.startsWith(w) || lev(w, t) <= (w.length > 4 ? 2 : 1))); };
   const isDesktop = () => window.matchMedia('(min-width: 768px)').matches;
 
   /* ---------- state ----------
