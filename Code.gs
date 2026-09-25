@@ -4,8 +4,8 @@
  * Version: New version → Deploy. The web-app URL stays the same.
  *
  * Tabs:
- *   Responses — one row per participant (device, order, preference taps)
- *   Tasks     — one row per participant per journey per screen
+ *   Responses / Tasks         — the insurance study (index.html)
+ *   Fun Responses / Fun Tasks — the playful study (fun.html), same columns
  * A participant id is written once. Tabs whose header row no longer matches
  * (an older version of this study) are renamed "<name> (old)" and fresh ones
  * are created, so old data is kept aside, never mixed in.
@@ -48,8 +48,9 @@ function doPost(e) {
     var lock = LockService.getScriptLock();
     lock.waitLock(10000);
     try {
-      var resp = sheet('Responses', RESP_HEAD);
-      var tasks = sheet('Tasks', TASK_HEAD);
+      var pre = d.study === 'fun' ? 'Fun ' : '';
+      var resp = sheet(pre + 'Responses', RESP_HEAD);
+      var tasks = sheet(pre + 'Tasks', TASK_HEAD);
       var pids = resp.getLastRow() > 1 ? resp.getRange(2, 2, resp.getLastRow() - 1, 1).getValues().map(function (r) { return String(r[0]); }) : [];
       if (pids.indexOf(String(d.pid)) === -1) {
         var pr = d.pr || {}, env = d.env || {};
@@ -79,10 +80,11 @@ function v(x) { return x === undefined || x === null ? '' : x; }
 // Plain GET confirms the deployment works. ?data=1 returns both tabs as JSON for the page's #results view.
 function doGet(e) {
   if (e && e.parameter && e.parameter.data === '1') {
-    var out = { responses: readAll('Responses'), tasks: readAll('Tasks') };
+    var pre = e.parameter.study === 'fun' ? 'Fun ' : '';
+    var out = { responses: readAll(pre + 'Responses'), tasks: readAll(pre + 'Tasks') };
     return ContentService.createTextOutput(JSON.stringify(out)).setMimeType(ContentService.MimeType.JSON);
   }
-  return ContentService.createTextOutput('Placement Study collector v2 is running.');
+  return ContentService.createTextOutput('Placement Study collector v3 is running.');
 }
 
 function readAll(name) {
@@ -99,7 +101,7 @@ function readAll(name) {
 
 // Clears every data row in Responses and Tasks (headers stay). Run from the editor.
 function resetData() {
-  ['Responses', 'Tasks'].forEach(function (name) {
+  ['Responses', 'Tasks', 'Fun Responses', 'Fun Tasks'].forEach(function (name) {
     var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(name);
     if (sh && sh.getLastRow() > 1) sh.deleteRows(2, sh.getLastRow() - 1);
   });
