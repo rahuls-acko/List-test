@@ -790,30 +790,40 @@
         // overall numbers (all screens pooled, paired)
         const allPairs = []; rs.forEach(r => screens.forEach(k => { const a = r.t['j1:' + k], b = r.t['j2:' + k]; if (a && b) allPairs.push(a.v === 'L' ? { L: a, T: b } : { L: b, T: a }); }));
 
-        // verdict card, in plain words
+        // verdict: one card per control type, then the overall line
         const side = v => v === 'L' ? 'Left' : 'Right';
-        const headline = !lead ? 'No clear winner yet' : side(lead) + ' is doing better';
+        const KIND = { usage: 'radio', cards: 'radio', pay: 'radio', drivers: 'checkbox', addons: 'checkbox', review: 'checkbox', garages: 'checkbox', docs: 'checkbox', table: 'checkbox', notif: 'toggle' };
+        const KIND_LABEL = { checkbox: 'Checkbox', radio: 'Radio', toggle: 'Toggle' };
+        const kinds = ['checkbox', 'radio', 'toggle'].map(kind => {
+          const xs = perScreen.filter(x => KIND[x.k] === kind); if (!xs.length) return null;
+          const l = xs.reduce((s, x) => s + x.l, 0), t = xs.reduce((s, x) => s + x.t, 0), tie = xs.reduce((s, x) => s + x.tie, 0), n = xs.reduce((s, x) => s + x.n, 0);
+          const okL = xs.reduce((s, x) => s + x.okL, 0), okT = xs.reduce((s, x) => s + x.okT, 0);
+          const tL = median(xs.map(x => x.tL).filter(v => v != null)), tT = median(xs.map(x => x.tT).filter(v => v != null));
+          const win = l > t ? 'L' : t > l ? 'T' : null; const m = Math.abs(l - t) / Math.max(1, l + t);
+          const sure = people < 8 ? 'too few people' : m < 0.15 ? 'very close' : m < 0.3 ? 'leaning' : 'clear';
+          return { kind, l, t, tie, n, okL, okT, tL, tT, win, sure, screens: xs.length };
+        }).filter(Boolean);
+        const kindCard = k => h('div', { class: 'card', style: 'gap:8px;padding:16px;border-color:' + (k.win ? 'var(--brandPrimary)' : 'var(--borderMedium)') },
+          h('span', { class: 'overline' }, KIND_LABEL[k.kind] + ' · ' + k.screens + (k.screens === 1 ? ' screen' : ' screens')),
+          h('h3', { class: 't-xl', style: 'margin:0' }, k.win ? side(k.win) + ' is better' : 'No difference'),
+          h('p', { class: 't-sm sec', style: 'margin:0' }, k.l + ' times left did better, ' + k.t + ' times right did better' + (k.tie ? ', ' + k.tie + ' same' : '') + '. ' + (k.sure === 'too few people' ? 'Too few people to trust yet.' : k.sure === 'very close' ? 'Very close.' : k.sure === 'leaning' ? 'Leaning that way.' : 'Clear.')),
+          h('table', { class: 'res-table', style: 'margin-top:4px' }, h('thead', null, h('tr', null, h('th', null, ''), h('th', { class: 'num' }, 'Left'), h('th', { class: 'num' }, 'Right'))),
+            h('tbody', null,
+              h('tr', null, h('td', null, 'Got it right'), h('td', { class: 'num' + (k.okL > k.okT ? ' l' : '') }, pct(k.okL, k.n)), h('td', { class: 'num' + (k.okT > k.okL ? ' l' : '') }, pct(k.okT, k.n))),
+              h('tr', null, h('td', null, 'Time per screen'), h('td', { class: 'num' + (k.tL < k.tT ? ' l' : '') }, fmtS(k.tL)), h('td', { class: 'num' + (k.tT < k.tL ? ' l' : '') }, fmtS(k.tT))))));
+        const headline = !lead ? 'No overall winner yet' : side(lead) + ' is ahead overall';
         const sub = people < 8 ? 'Only ' + people + ' people so far. Need at least 8 before this means anything, and 15 to be sure.'
-          : margin < 0.15 ? 'The two sides are very close. More people needed.'
+          : margin < 0.15 ? 'The two sides are very close overall. More people needed.'
           : people < 15 ? 'A real gap is showing. A few more people will confirm it.' : 'Enough people and a clear gap. This can be trusted.';
-        const stat = (label, l, t, fmt, lowerBetter, meaning) => h('div', { class: 'card', style: 'gap:4px;padding:14px 16px' },
-          h('span', { class: 't-sm sec' }, label),
-          h('div', { style: 'display:flex;gap:20px;align-items:baseline' },
-            h('span', null, h('span', { class: 't-2xl' + ((lowerBetter ? l < t : l > t) ? ' brand' : '') }, fmt(l)), h('span', { class: 't-xs sec' }, ' left')),
-            h('span', null, h('span', { class: 't-2xl' + ((lowerBetter ? t < l : t > l) ? ' brand' : '') }, fmt(t)), h('span', { class: 't-xs sec' }, ' right'))),
-          h('span', { class: 't-xs ter' }, meaning));
-        const okRate = side => pct(allPairs.filter(p => p[side].ok).length, allPairs.length);
-        const medT = side => median(allPairs.map(p => p[side].t));
-        const wrongPP = side => allPairs.length ? (allPairs.reduce((s, p) => s + p[side].wrong, 0) / rs.length).toFixed(1) : '–';
-        const verdict = h('div', { class: 'card' },
-          h('span', { class: 'overline' }, (dev === 'mobile' ? 'Phone' : 'Laptop') + ' · ' + people + ' people'),
-          h('h2', { class: 't-2xl' }, headline),
-          h('p', { class: 't-base' }, sub),
-          h('div', { style: 'display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px' },
-            stat('Got the task right', okRate('L'), okRate('T'), x => x, false, 'Higher is better'),
-            stat('Time per screen', medT('L'), medT('T'), fmtS, true, 'Lower is better'),
-            stat('Mistakes per person', wrongPP('L'), wrongPP('T'), x => x, true, 'Lower is better')),
-          h('p', { class: 't-sm sec' }, 'Purple = the better side. Left means the checkbox or radio sits before the text; right means after it.'));
+        const verdict = h('div', { style: 'display:flex;flex-direction:column;gap:12px' },
+          h('div', { class: 'card', style: 'gap:6px' },
+            h('span', { class: 'overline' }, (dev === 'mobile' ? 'Phone' : 'Laptop') + ' · ' + people + ' people'),
+            h('h2', { class: 't-2xl', style: 'margin:0' }, 'Which side is better?'),
+            h('p', { class: 't-sm sec', style: 'margin:0' }, 'Left means the control sits before the text, right means after it. Purple = the better number.')),
+          h('div', { style: 'display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px' }, kinds.map(kindCard)),
+          h('div', { class: 'card', style: 'gap:6px' },
+            h('h3', { class: 't-lg bold', style: 'margin:0' }, headline),
+            h('p', { class: 't-sm sec', style: 'margin:0' }, sub + ' Left won ' + won.L + ' screens, right won ' + won.T + (perScreen.length - won.L - won.T ? ', ' + (perScreen.length - won.L - won.T) + ' tied' : '') + '.')));
 
         // how it is decided
         const how = h('div', { class: 'card' }, h('h3', { class: 't-lg bold' }, 'How the winner is picked'),
@@ -859,9 +869,9 @@
           h('p', { class: 't-sm sec' }, 'A second journey is normally faster because people have practised. If one order gains much less, or makes more mistakes, that switch hurt more. That matters because whichever side ships, existing users will have to relearn it.'),
           h('ul', { class: 't-sm', style: 'margin:0;padding-left:20px' }, sw));
 
-        const details = h('div', { hidden: true, style: 'display:flex;flex-direction:column;gap:16px' }, detailCard, first, switchCard);
+        const details = h('div', { hidden: true, style: 'display:flex;flex-direction:column;gap:16px' }, how, detailCard, first, switchCard);
         const toggle = h('button', { class: 'btn ghost md', onclick: () => { details.hidden = !details.hidden; toggle.textContent = details.hidden ? 'Show more detail' : 'Hide the detail'; } }, 'Show more detail');
-        out.append(verdict, how, screensCard, toggle, details);
+        out.append(verdict, screensCard, toggle, details);
       }
 
       // preference
