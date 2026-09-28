@@ -765,12 +765,33 @@
           const tL = median(xs.map(x => x.tL).filter(v => v != null)), tT = median(xs.map(x => x.tT).filter(v => v != null));
           const win = l > t ? 'L' : t > l ? 'T' : null; const m = Math.abs(l - t) / Math.max(1, l + t);
           const sure = people < 8 ? 'too few people' : m < 0.15 ? 'very close' : m < 0.3 ? 'leaning' : 'clear';
-          return { kind, l, t, tie, n, okL, okT, tL, tT, win, sure, screens: xs.length };
+          const wL = xs.reduce((s, x) => s + x.wL, 0), wT = xs.reduce((s, x) => s + x.wT, 0);
+          const big = xs.slice().sort((a, b) => Math.abs(b.l - b.t) - Math.abs(a.l - a.t))[0];
+          return { kind, l, t, tie, n, okL, okT, tL, tT, wL, wT, win, sure, screens: xs.length, big };
         }).filter(Boolean);
+        const whyText = k => {
+          if (!k.win) return 'Same number of people did better on each side.';
+          const W = k.win, O = W === 'L' ? 'T' : 'L', name = side(W).toLowerCase(), other = side(O).toLowerCase();
+          const ok = { L: k.okL, T: k.okT }, tm = { L: k.tL, T: k.tT }, wr = { L: k.wL, T: k.wT };
+          const accW = pct(ok[W], k.n), accO = pct(ok[O], k.n), fasterW = tm[W] != null && tm[O] != null && tm[W] < tm[O], sameAcc = ok[W] === ok[O];
+          const parts = [];
+          if (ok[W] > ok[O]) parts.push('more people got it right with ' + name + ' (' + accW + ' vs ' + accO + ')');
+          else if (sameAcc) parts.push('accuracy was the same (' + accW + ')');
+          else parts.push(other + ' had slightly better accuracy (' + accO + ' vs ' + accW + ')');
+          if (fasterW) parts.push(name + ' was faster (' + fmtS(tm[W]) + ' vs ' + fmtS(tm[O]) + ')');
+          else if (tm[W] != null && tm[O] != null && tm[W] > tm[O]) parts.push('but ' + other + ' was faster (' + fmtS(tm[O]) + ' vs ' + fmtS(tm[W]) + ')');
+          if (wr[W] < wr[O]) parts.push('fewer wrong taps (' + wr[W] + ' vs ' + wr[O] + ')');
+          else if (wr[W] > wr[O]) parts.push('though more wrong taps (' + wr[W] + ' vs ' + wr[O] + ')');
+          let out = parts.join(', ');
+          out = out.charAt(0).toUpperCase() + out.slice(1) + '.';
+          if (k.big && k.screens > 1 && k.big.winner === W) out += ' Biggest gap on \u201c' + LABEL[k.big.k] + '\u201d (' + (W === 'L' ? k.big.l + ' vs ' + k.big.t : k.big.t + ' vs ' + k.big.l) + ').';
+          return out;
+        };
         const kindCard = k => h('div', { class: 'card', style: 'gap:8px;padding:16px;border-color:' + (k.win ? 'var(--brandPrimary)' : 'var(--borderMedium)') },
           h('span', { class: 'overline' }, KIND_LABEL[k.kind] + ' · ' + k.screens + (k.screens === 1 ? ' screen' : ' screens')),
           h('h3', { class: 't-xl', style: 'margin:0' }, k.win ? side(k.win) + ' is better' : 'No difference'),
           h('p', { class: 't-sm sec', style: 'margin:0' }, k.l + ' times left did better, ' + k.t + ' times right did better' + (k.tie ? ', ' + k.tie + ' same' : '') + '. ' + (k.sure === 'too few people' ? 'Too few people to trust yet.' : k.sure === 'very close' ? 'Very close.' : k.sure === 'leaning' ? 'Leaning that way.' : 'Clear.')),
+          h('div', { class: 'tip ' + (k.win ? 'info' : 'warn'), style: 'margin:0' }, h('b', null, 'Why: '), whyText(k)),
           h('table', { class: 'res-table', style: 'margin-top:4px' }, h('thead', null, h('tr', null, h('th', null, ''), h('th', { class: 'num' }, 'Left'), h('th', { class: 'num' }, 'Right'))),
             h('tbody', null,
               h('tr', null, h('td', null, 'Got it right'), h('td', { class: 'num' + (k.okL > k.okT ? ' l' : '') }, pct(k.okL, k.n)), h('td', { class: 'num' + (k.okT > k.okL ? ' l' : '') }, pct(k.okT, k.n))),
